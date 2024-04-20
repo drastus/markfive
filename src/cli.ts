@@ -8,7 +8,7 @@ const args = process.argv;
 let input = '';
 
 try {
-	input = input + fs.readFileSync(args[2], 'utf8');
+	input += fs.readFileSync(args[2], 'utf8');
 } catch (err) {
 	console.error(err);
 	process.exit(1);

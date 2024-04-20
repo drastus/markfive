@@ -20,8 +20,8 @@ class Markfive {
 		const ast = parser.parse();
 
 		const renderer = new Renderer(ast);
-		return renderer.render();
-	}
+		renderer.render();
+	};
 }
 
 export default Markfive;

@@ -5,6 +5,10 @@ Chapter 1
 =========
 
 First paragraph. The second sentence includes a [link](https://en.wikipedia.org/wiki/Main_Page).
+The third sentence is in the new line.
+
+{style="color: orange"}
+Second paragraph.
 
 Chapter 2
 =========
@@ -12,6 +16,8 @@ Chapter 2
 List:
 1. First element
 2. Second element
+	1. Second first element
+	2. Second second element
 3. Third element
 
 Subchapter 1
@@ -21,3 +27,21 @@ Unordered list:
 - sth
 - sth else
 -{lang=en data-text="Foo 1" #id .class} sth even more else
+
+``
+	mini-codeblock;
+	second line;
+
+Subchapter 2
+------------
+
+More complicated list:
+
+1. Item 1
+2.
+	Item 2.
+
+	Has many paragraphs.
+
+	This is the last one of them.
+3. Item 3

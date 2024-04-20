@@ -1,4 +1,4 @@
-import {attributesRegexString, parseAttributes} from './helpers';
+import {attributesRegexString} from './helpers';
 
 class LineLexer {
 	lines: string[];
@@ -11,11 +11,6 @@ class LineLexer {
 		this.current = 0;
 	}
 
-	lineIsEmpty = (add: number) => {
-		if (this.current + add >= this.lines.length || this.current + add < 0) return true;
-		return this.lines[this.current + add].length === 0;
-	}
-
 	tokenize = () => {
 		console.log('LineLexer tokenize\n');
 
@@ -25,49 +20,91 @@ class LineLexer {
 		}
 
 		return this.tokens;
-	}
+	};
 
 	tokenizeLine = () => {
 		const line = this.lines[this.current];
 		let match: RegExpMatchArray | null = null;
 
 		if (line.length === 0) {
+			this.tokens.push({type: 'EMPTY_LINE'});
 			return;
 		}
 
 		if (line.match(/^\* \* \*$/)) {
-			if (this.lineIsEmpty(-1) && this.lineIsEmpty(+1)) {
-				this.tokens.push({type: 'LINE_WITH_SEPARATOR_MARK', text: line});
-				return;
-			}
-			this.tokens.push({type: 'TEXT_LINE', text: line});
+			this.tokens.push({type: 'LINE_WITH_SEPARATOR_MARK', line});
 			return;
 		}
 
 		for (const [index, char] of ['\\*', '=', '-', '\\.'].entries()) {
 			if (line.match(`^${char}{3,}$`)) {
-				if (this.lineIsEmpty(-2) && !this.lineIsEmpty(-1) && this.lineIsEmpty(+1)) {
+				if ((this.lines[this.current - 1] ?? '').length > 0) {
 					this.tokens.pop();
-					this.tokens.push({type: 'LINE_WITH_HEADING_MARK', text: this.lines[this.current - 1], level: index + 1});
-					return;
+					this.tokens.push({
+						type: 'LINE_WITH_HEADING_MARK',
+						line: this.lines[this.current - 1],
+						marker: line,
+						level: index + 1,
+						text: this.lines[this.current - 1].trimStart(),
+					});
+				} else {
+					this.tokens.push({type: 'TEXT_LINE', text: line});
 				}
-				this.tokens.push({type: 'TEXT_LINE', text: line});
 				return;
 			}
-		};
+		}
 
-		const listItemRegexString = `^(-|\\d+\\.)${attributesRegexString} `;
-		if (match = line.match(listItemRegexString)) {
+		if (match = line.match(`^([ \t]*)${attributesRegexString}$`)) {
 			this.tokens.push({
-				type: 'LINE_WITH_LIST_ITEM_MARK',
-				text: line.substring(match[0].length),
-				marker: match[1],
-				attributes: parseAttributes(match[2]),
+				type: 'LINE_WITH_ATTRIBUTES',
+				line,
+				indent: match[1],
+				attributes: match[2],
 			});
 			return;
 		}
-		this.tokens.push({type: 'TEXT_LINE', text: line, indent: line.match(/^[ \t]*/)?.[0].length ?? 0});
-	}
+
+		if (match = line.match(`^([ \t]*)(-|\\d+\\.)${attributesRegexString}(?: (.+))?`)) {
+			this.tokens.push({
+				type: 'LINE_WITH_LIST_ITEM_MARK',
+				line,
+				indent: match[1],
+				marker: match[2],
+				attributes: match[3],
+				text: match[4],
+			});
+			return;
+		}
+
+		if (match = line.match(`^([ \t]*)""${attributesRegexString}(?: (.+))?$`)) {
+			this.tokens.push({
+				type: 'LINE_WITH_BLOCK_QUOTE_MARK',
+				line,
+				indent: match[1],
+				attributes: match[2],
+				text: match[3],
+			});
+			return;
+		}
+
+		if (match = line.match(`^([ \t]*)\`\`${attributesRegexString}(?: (.+))?$`)) {
+			this.tokens.push({
+				type: 'LINE_WITH_BLOCK_CODE_MARK',
+				line,
+				indent: match[1],
+				attributes: match[2],
+				text: match[3],
+			});
+			return;
+		}
+
+		this.tokens.push({
+			type: 'TEXT_LINE',
+			line,
+			indent: line.match(/^[ \t]*/)?.[0],
+			text: line.trimStart(),
+		});
+	};
 }
 
 export default LineLexer;

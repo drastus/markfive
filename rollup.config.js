@@ -8,7 +8,7 @@ export default [
 			format: 'cjs',
 			sourcemap: true,
 		},
-		plugins: [typescript()]
+		plugins: [typescript()],
 	},
 	{
 		input: 'src/cli.ts',
@@ -19,6 +19,6 @@ export default [
 			entryFileNames: '[name].cjs',
 		},
 		external: ['node:fs'],
-		plugins: [typescript()]
+		plugins: [typescript()],
 	},
 ];

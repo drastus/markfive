@@ -1,18 +1,18 @@
 const attributeRegexString = '(?:(?:data-)?[a-z]+(?:=(?:\\w+|"[^"]*"|\'[^\']*\'))?|\\.[^ \\t{}]+|#[^ \\t{}]+)';
 export const attributesRegexString = `(?:{(${attributeRegexString}(?: ${attributeRegexString})*)})?`;
 
-export const parseAttributes = (attributesString: string) => {
+export const parseAttributes = (attributesString?: string) => {
+	if (attributesString === undefined) return undefined;
+
 	const attributes: Record<string, string | string[]> = {};
 	if (!attributesString) return attributes;
 
-	console.log('attributesString', attributesString);
 	const attributesArray: string[] = [];
 	const attributeRegex = new RegExp(attributeRegexString, 'g');
 	let match: RegExpMatchArray | null = null;
 	while (match = attributeRegex.exec(attributesString)) {
 		attributesArray.push(match[0]);
 	}
-	console.log('attributesArray', attributesArray);
 
 	attributesArray.forEach((attribute) => {
 		if (attribute.startsWith('#')) {
@@ -25,7 +25,7 @@ export const parseAttributes = (attributesString: string) => {
 				const eqIndex = attribute.indexOf('=');
 				const attributeName = attribute.substring(0, eqIndex);
 				let attributeValue = attribute.substring(eqIndex + 1);
-				if (attributeValue[0] === '"' || attributeValue[0] === "'") {
+				if (attributeValue.startsWith('"') || attributeValue.startsWith('\'')) {
 					attributeValue = attributeValue.substring(1, attributeValue.length - 1);
 				}
 				attributes[attributeName] = attributeValue;
@@ -35,4 +35,13 @@ export const parseAttributes = (attributesString: string) => {
 		}
 	});
 	return attributes;
-}
+};
+
+export const calculateIndent = (indent: string) => {
+	const tabsCount = indent.split('\t').length - 1;
+	if (tabsCount > 0) {
+		return tabsCount;
+	} else {
+		return indent.split(' ').length - 1;
+	}
+};
