@@ -29,3 +29,28 @@ type BlockNodeType =
 	'SEPARATOR' |
 	'BLOCK_CODE' |
 	'BLOCK_QUOTE';
+
+type InlineTokenType =
+	'TEXT' |
+	'BRACKET_OPEN' |
+	'BRACKET_CLOSE' |
+	'DEFAULT_ATTRIBUTE' |
+	'EM' |
+	'STRONG' |
+	'MARK' |
+	'DFN' |
+	'VAR' |
+	'CODE' |
+	'CITE' |
+	'B' |
+	'I' |
+	'U' |
+	'S';
+
+type InlineToken = {
+	type: InlineTokenType,
+	position?: 'start' | 'end',
+	text?: string,
+	attributes?: string,
+	defaultAttribute?: string,
+};

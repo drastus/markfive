@@ -4,8 +4,8 @@ Document title
 Chapter 1
 =========
 
-First paragraph. The second sentence includes a [link](https://en.wikipedia.org/wiki/Main_Page).
-The third sentence is in the new line.
+First parag+raph. The +second+ sentence !!includes!! a [link](https://en.wikipedia.org/wiki/Requiem_(Verdi)).
+The third sentence! is in the new line.
 
 {style="color: orange"}
 Second paragraph.
@@ -16,7 +16,7 @@ Chapter 2
 List:
 1. First element
 2. Second element
-	1. Second first element
+	1. Second *first*{lang=en} element
 	2. Second second element
 3. Third element
 

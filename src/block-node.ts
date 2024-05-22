@@ -4,6 +4,7 @@ class BlockNode {
 	attributes?: Record<string, string | string[]>;
 	content?: string;
 	children: BlockNode[];
+	tokens?: InlineToken[];
 	// defaultChildType?: BlockNodeType;
 
 	// static defaultChildTypes = {

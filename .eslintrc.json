@@ -14,7 +14,9 @@
     "rules": {
 		"arrow-parens": ["error", "always"],
 		"capitalized-comments": "off",
+		"complexity": "off",
 		"curly": ["error", "multi-line"],
+		"max-depth": "off",
 		"no-cond-assign": "off",
 		"no-else-return": "off",
 		"no-lonely-if": "off",

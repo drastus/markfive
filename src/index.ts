@@ -1,3 +1,4 @@
+import InlineLexer from './inline-lexer';
 import LineLexer from './line-lexer';
 import Parser from './parser';
 import Renderer from './renderer';
@@ -13,11 +14,11 @@ class Markfive {
 		const lineLexer = new LineLexer(this.source);
 		const lineTokens = lineLexer.tokenize();
 
-		// const inlineLexer = new InlineLexer(lineTokens);
-		// const tokens = inlineLexer.tokenize();
-
 		const parser = new Parser(lineTokens);
-		const ast = parser.parse();
+		let ast = parser.parse();
+
+		const inlineLexer = new InlineLexer(ast);
+		ast = inlineLexer.tokenize();
 
 		const renderer = new Renderer(ast);
 		renderer.render();
