@@ -1,9 +1,11 @@
+import {type BlockNodeType, type InlineToken, type Node} from './types';
+
 class BlockNode {
 	type: BlockNodeType;
 	subtype?: string;
 	attributes?: Record<string, string | string[]>;
 	content?: string;
-	children: BlockNode[];
+	children: Node[];
 	tokens?: InlineToken[];
 	// defaultChildType?: BlockNodeType;
 
@@ -22,7 +24,7 @@ class BlockNode {
 			attributes?: Record<string, string | string[]>,
 			subtype?: string,
 			content?: string,
-			children?: BlockNode[],
+			children?: Node[],
 		},
 	) {
 		this.type = type;

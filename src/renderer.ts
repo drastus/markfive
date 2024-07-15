@@ -1,9 +1,9 @@
-import type BlockNode from './block-node';
+import type {Node} from './types';
 
 class Renderer {
-	ast: BlockNode;
+	ast: Node;
 
-	constructor(ast: BlockNode) {
+	constructor(ast: Node) {
 		this.ast = ast;
 	}
 

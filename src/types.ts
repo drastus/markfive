@@ -1,4 +1,7 @@
-type LineTokenType =
+import type BlockNode from './block-node';
+import type InlineNode from './inline-node';
+
+export type LineTokenType =
 	'EMPTY_LINE' |
 	'LINE_WITH_ATTRIBUTES' |
 	'LINE_WITH_BLOCK_CODE_MARK' |
@@ -8,7 +11,7 @@ type LineTokenType =
 	'LINE_WITH_SEPARATOR_MARK' |
 	'TEXT_LINE';
 
-type LineToken = {
+export type LineToken = {
 	type: LineTokenType,
 	line?: string,
 	indent?: string,
@@ -18,7 +21,9 @@ type LineToken = {
 	attributes?: string,
 };
 
-type BlockNodeType =
+export type Node = BlockNode | InlineNode;
+
+export type BlockNodeType =
 	'DOCUMENT' |
 	'HEADING' |
 	'PARAGRAPH' |
@@ -30,11 +35,10 @@ type BlockNodeType =
 	'BLOCK_CODE' |
 	'BLOCK_QUOTE';
 
-type InlineTokenType =
+export type InlineTokenType =
 	'TEXT' |
 	'BRACKET_OPEN' |
 	'BRACKET_CLOSE' |
-	'DEFAULT_ATTRIBUTE' |
 	'EM' |
 	'STRONG' |
 	'MARK' |
@@ -47,9 +51,24 @@ type InlineTokenType =
 	'U' |
 	'S';
 
-type InlineToken = {
+export type InlineNodeType =
+	'TEXT' |
+	'EM' |
+	'STRONG' |
+	'MARK' |
+	'DFN' |
+	'VAR' |
+	'CODE' |
+	'CITE' |
+	'B' |
+	'I' |
+	'U' |
+	'S' |
+	'A';
+
+export type InlineToken = {
 	type: InlineTokenType,
-	position?: 'start' | 'end',
+	position?: Array<'start' | 'end'>,
 	text?: string,
 	attributes?: string,
 	defaultAttribute?: string,

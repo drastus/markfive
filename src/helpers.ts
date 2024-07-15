@@ -45,3 +45,10 @@ export const calculateIndent = (indent: string) => {
 		return indent.split(' ').length - 1;
 	}
 };
+
+export const findIndexInRange = <T>(array: T[], predicate: (item: T) => unknown, from: number, to?: number) => {
+	const index = array.slice(from).findIndex(predicate);
+	if (index < 0) return undefined;
+	if (to !== undefined && from + index > to) return undefined;
+	return from + index;
+};

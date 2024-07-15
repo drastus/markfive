@@ -20,6 +20,7 @@
 		"no-cond-assign": "off",
 		"no-else-return": "off",
 		"no-lonely-if": "off",
+		"no-negated-condition": "off",
 		"padding-line-between-statements": "off",
 		"object-shorthand": ["error", "properties"],
 		"@typescript-eslint/ban-types": ["error", {"extendDefaults": true}],

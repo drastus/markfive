@@ -1,4 +1,5 @@
 import {attributesRegexString} from './helpers';
+import {LineToken} from './types';
 
 class LineLexer {
 	lines: string[];

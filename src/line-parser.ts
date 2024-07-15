@@ -1,12 +1,13 @@
 /* eslint-disable no-useless-return */
 import BlockNode from './block-node';
 import {calculateIndent, parseAttributes} from './helpers';
+import {type LineToken, type Node} from './types';
 
-class Parser {
+class LineParser {
 	tokens: LineToken[];
 	current: number;
 	indentStack: number[];
-	ast: BlockNode;
+	ast: Node;
 	lastAttributes?: string;
 
 	constructor(tokens: LineToken[]) {
@@ -75,7 +76,6 @@ class Parser {
 
 		if (indent < this.indentStack[this.indentStack.length - 1]) {
 			const newIndentStackEnd = this.indentStack.findIndex((i) => i >= indent);
-			console.log('mpop1', indent, this.indentStack[this.indentStack.length - 1]);
 			this.indentStack = this.indentStack.slice(0, newIndentStackEnd + 1);
 		} else if (isSubnodeOfListItem) {
 			this.indentStack.push(indent);
@@ -217,4 +217,4 @@ class Parser {
 	};
 }
 
-export default Parser;
+export default LineParser;

@@ -10,6 +10,8 @@ The third sentence! is in the new line.
 {style="color: orange"}
 Second paragraph.
 
+A recent meta-analysis of prospective studies in the general population found that +the risk of all-cause mortality +increased by +33.5%+ for each 5 μmol/L increase+ in homocysteine+. However, +there was +significant+ heterogeneity among studies+, which could be due to differences in folate intake patterns, serum folate levels, or genetic variations.
+
 Chapter 2
 =========
 
