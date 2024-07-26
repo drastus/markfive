@@ -2,26 +2,35 @@ import InlineParser from './inline-parser';
 import LineLexer from './line-lexer';
 import LineParser from './line-parser';
 import Renderer from './renderer';
+import {type Options} from './types';
 
 class Markfive {
 	source: string;
+	options: Options;
 
-	constructor(source: string) {
+	constructor(source: string, options: Options) {
 		this.source = source;
+		this.options = options;
 	}
 
 	run = () => {
-		const lineLexer = new LineLexer(this.source);
+		const lineLexer = new LineLexer(this.source, this.options);
 		const lineTokens = lineLexer.tokenize();
 
-		const lineParser = new LineParser(lineTokens);
-		let ast = lineParser.parse();
+		if (!this.options.tokens) {
+			const lineParser = new LineParser(lineTokens, this.options);
+			let ast = lineParser.parse();
 
-		const inlineParser = new InlineParser(ast);
-		ast = inlineParser.parse();
+			if (!this.options['line-ast']) {
+				const inlineParser = new InlineParser(ast, this.options);
+				ast = inlineParser.parse();
 
-		const renderer = new Renderer(ast);
-		renderer.render();
+				if (!this.options.ast) {
+					const renderer = new Renderer(ast, this.options);
+					renderer.render();
+				}
+			}
+		}
 	};
 }
 

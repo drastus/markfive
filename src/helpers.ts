@@ -37,6 +37,15 @@ export const parseAttributes = (attributesString?: string) => {
 	return attributes;
 };
 
+export const stringifyAttributes = (attributes?: object) => {
+	let string = '';
+	if (!attributes) return string;
+	Object.keys(attributes).forEach((attributeName) => {
+		string += ` ${attributeName}="${attributes[attributeName]}"`;
+	});
+	return string;
+};
+
 export const calculateIndent = (indent: string) => {
 	const tabsCount = indent.split('\t').length - 1;
 	if (tabsCount > 0) {

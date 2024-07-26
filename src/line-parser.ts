@@ -1,7 +1,7 @@
 /* eslint-disable no-useless-return */
 import BlockNode from './block-node';
 import {calculateIndent, parseAttributes} from './helpers';
-import {type LineToken, type Node} from './types';
+import {type Options, type LineToken, type Node} from './types';
 
 class LineParser {
 	tokens: LineToken[];
@@ -9,12 +9,14 @@ class LineParser {
 	indentStack: number[];
 	ast: Node;
 	lastAttributes?: string;
+	options: Options;
 
-	constructor(tokens: LineToken[]) {
+	constructor(tokens: LineToken[], options: Options) {
 		this.tokens = tokens;
 		this.current = 0;
 		this.indentStack = [];
 		this.ast = new BlockNode('DOCUMENT');
+		this.options = options;
 	}
 
 	activeNode = () => {
@@ -89,7 +91,7 @@ class LineParser {
 		const activeNode = this.activeNode();
 
 		activeNode.children.push(node);
-		console.log('addNode', this.indentStack, activeNode.type, ' > ', node.type);
+		if (this.options.debug) console.log('addNode', this.indentStack, activeNode.type, ' > ', node.type);
 
 		if (['PARAGRAPH', 'UNORDERED_LIST', 'ORDERED_LIST', 'BLOCK_QUOTE', 'BLOCK_CODE'].includes(node.type)) {
 			this.indentStack.push(newIndent);
@@ -102,8 +104,7 @@ class LineParser {
 	};
 
 	parse = () => {
-		console.log(this.tokens.map((t) => JSON.stringify(t)));
-		console.log('parse');
+		if (this.options.debug) console.log('LineParser parse');
 
 		while (this.current < this.tokens.length) {
 			this.parseToken();

@@ -1,8 +1,8 @@
 import type BlockNode from './block-node';
 import {attributesRegexString, findIndexInRange} from './helpers';
 import InlineNode from './inline-node';
-import {
-	type InlineNodeType, type InlineToken, type InlineTokenType, type Node,
+import type {
+	InlineNodeType, InlineToken, InlineTokenType, Node, Options,
 } from './types';
 
 const specialChars = /[+*[\]{}"'`:~^!/_=-]/;
@@ -26,17 +26,20 @@ const selfNestableTokenTypes = ['B', 'I', 'EM', 'STRONG', 'MARK'];
 class InlineParser {
 	ast: Node;
 	current: number;
+	options: Options;
 
-	constructor(source: Node) {
+	constructor(source: Node, options: Options) {
 		this.ast = source;
 		this.current = 0;
+		this.options = options;
 	}
 
 	parse = () => {
-		console.log('InlineParser tokenize & parse\n');
+		if (this.options.debug) console.log('InlineParser tokenize & parse\n');
 
 		this.parseNode(this.ast as BlockNode);
 
+		if (this.options.ast || this.options.debug) console.log(`${JSON.stringify(this.ast, null, 4)}\n`);
 		return this.ast;
 	};
 
@@ -179,7 +182,7 @@ class InlineParser {
 				);
 				if (closeTokenIndex !== undefined) {
 					const newNode = new InlineNode('A', {
-						tokens: tokens.slice(closeTokenIndex + 1),
+						tokens: tokens.slice(index + 1, closeTokenIndex),
 						attributes: {href: tokens[closeTokenIndex].defaultAttribute!},
 					});
 					node.children.push(newNode);
@@ -232,7 +235,10 @@ class InlineParser {
 		if (node.type === 'TEXT' && node.children.length === 1 && node.children[0].type === 'TEXT') {
 			node.children = [];
 		}
-		node.tokens = undefined;
+		if (!this.options.debug) {
+			node.tokens = undefined;
+			if (node.children.length > 0) node.content = undefined;
+		}
 	};
 }
 

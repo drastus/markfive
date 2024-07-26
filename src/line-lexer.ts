@@ -1,25 +1,28 @@
 import {attributesRegexString} from './helpers';
-import {LineToken} from './types';
+import {type Options, type LineToken} from './types';
 
 class LineLexer {
 	lines: string[];
 	tokens: LineToken[];
 	current: number;
+	options: Options;
 
-	constructor(source: string) {
+	constructor(source: string, options: Options) {
 		this.lines = source.split('\n').map((s) => s.trimEnd());
 		this.tokens = [];
 		this.current = 0;
+		this.options = options;
 	}
 
 	tokenize = () => {
-		console.log('LineLexer tokenize\n');
+		if (this.options.debug) console.log('LineLexer tokenize\n');
 
 		while (this.current < this.lines.length) {
 			this.tokenizeLine();
 			this.current++;
 		}
 
+		if (this.options.tokens || this.options.debug) console.log(this.tokens.map((t) => JSON.stringify(t)));
 		return this.tokens;
 	};
 

@@ -1,6 +1,13 @@
 import type BlockNode from './block-node';
 import type InlineNode from './inline-node';
 
+export type Options = {
+	tokens: boolean,
+	'line-ast': boolean,
+	ast: boolean,
+	debug: boolean,
+};
+
 export type LineTokenType =
 	'EMPTY_LINE' |
 	'LINE_WITH_ATTRIBUTES' |
