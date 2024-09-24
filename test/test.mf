@@ -8,9 +8,10 @@ First parag+raph. The +second+ sentence !!includes!! a [link](https://en.wikiped
 The third sentence! is in the new line.
 
 {style="color: orange"}
-Second paragraph.
++Second+ paragraph.
 
 A recent meta-analysis of prospective studies in the general population found that +the risk of all-cause mortality +increased by +33.5%+ for each 5 μmol/L increase+ in homocysteine+. However, +there was +significant+ heterogeneity among studies+, which could be due to differences in folate intake patterns, serum folate levels, or genetic variations.
+
 
 Chapter 2
 =========
@@ -47,3 +48,28 @@ More complicated list:
 
 	This is the last one of them.
 3. Item 3
+
+
+Chapter 3: Tables
+=================
+
+Simple table
+------------
+
+|! Name ! Position
+|| Chao | Intern
+|| Nguyễn | Worker
+
+Long table
+----------
+
+! Name
+! Position
+|-
+| Chao
+| Intern
+|-
+| Nguyễn
+| Worker
+
+The last paragraph.

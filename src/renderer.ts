@@ -8,6 +8,11 @@ const elementMappings: Record<string, string> = {
 	ORDERED_LIST: 'OL',
 	UNORDERED_LIST: 'UL',
 	LIST_ITEM: 'LI',
+	TABLE_ROW: 'TR',
+};
+const tableCellElementMappings: Record<string, string> = {
+	'|': 'TD',
+	'!': 'TH',
 };
 
 class Renderer {
@@ -33,6 +38,7 @@ class Renderer {
 	renderNode = (node: Node) => {
 		let elementType = elementMappings[node.type] ?? node.type;
 		if (elementType === 'HEADING') elementType = `H${(node as BlockNode).subtype}`;
+		if (elementType === 'TABLE_CELL') elementType = tableCellElementMappings[(node as BlockNode).subtype!];
 		if (elementType === 'TEXT') {
 			return node.content!;
 		}

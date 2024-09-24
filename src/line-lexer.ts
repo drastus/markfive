@@ -102,6 +102,39 @@ class LineLexer {
 			return;
 		}
 
+		if (match = line.match(`^([ \t]*)\\|${attributesRegexString}(\\||!)(?: (.+))?$`)) {
+			this.tokens.push({
+				type: 'LINE_WITH_TABLE_ROW_MARK',
+				line,
+				indent: match[1],
+				attributes: match[2],
+				text: match[3] + ' ' + match[4],
+			});
+			return;
+		}
+
+		if (match = line.match(`^([ \t]*)\\|-${attributesRegexString}`)) {
+			this.tokens.push({
+				type: 'LINE_WITH_TABLE_ROW_SEPARATOR_MARK',
+				line,
+				indent: match[1],
+				attributes: match[2],
+			});
+			return;
+		}
+
+		if (match = line.match(`^([ \t]*)(\\||!)${attributesRegexString}(?: (.+))?$`)) {
+			this.tokens.push({
+				type: 'LINE_WITH_TABLE_CELL_MARK',
+				line,
+				indent: match[1],
+				marker: match[2],
+				attributes: match[3],
+				text: match[4],
+			});
+			return;
+		}
+
 		this.tokens.push({
 			type: 'TEXT_LINE',
 			line,

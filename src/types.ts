@@ -16,6 +16,9 @@ export type LineTokenType =
 	'LINE_WITH_HEADING_MARK' |
 	'LINE_WITH_LIST_ITEM_MARK' |
 	'LINE_WITH_SEPARATOR_MARK' |
+	'LINE_WITH_TABLE_ROW_MARK' |
+	'LINE_WITH_TABLE_ROW_SEPARATOR_MARK' |
+	'LINE_WITH_TABLE_CELL_MARK' |
 	'TEXT_LINE';
 
 export type LineToken = {
@@ -40,7 +43,10 @@ export type BlockNodeType =
 	'LIST_ITEM' |
 	'SEPARATOR' |
 	'BLOCK_CODE' |
-	'BLOCK_QUOTE';
+	'BLOCK_QUOTE' |
+	'TABLE' |
+	'TABLE_ROW' |
+	'TABLE_CELL';
 
 export type InlineTokenType =
 	'TEXT' |
@@ -56,7 +62,9 @@ export type InlineTokenType =
 	'B' |
 	'I' |
 	'U' |
-	'S';
+	'S' |
+	'TD' |
+	'TH';
 
 export type InlineNodeType =
 	'TEXT' |

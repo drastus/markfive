@@ -72,6 +72,12 @@ class LineParser {
 		if (['ORDERED_LIST', 'UNORDERED_LIST'].includes(activeNode.type) && !['LIST_ITEM', 'ORDERED_LIST', 'UNORDERED_LIST'].includes(node.type) && !isSubnodeOfListItem) {
 			this.indentStack.pop();
 		}
+		if (activeNode.type === 'TABLE' && node.type !== 'TABLE_ROW') {
+			this.indentStack.pop();
+		}
+		if (activeNode.type === 'TABLE_ROW' && node.type !== 'TABLE_CELL') {
+			this.indentStack.pop();
+		}
 		if (node.type === 'HEADING') {
 			this.indentStack = [];
 		}
@@ -84,7 +90,7 @@ class LineParser {
 		}
 	};
 
-	addNode = (node: BlockNode, indent = '') => {
+	addNode = (node: BlockNode, indent = '', forcePushToIndentStack = false) => {
 		const newIndent = calculateIndent(indent);
 		this.updateIndentStack(node, newIndent);
 
@@ -93,7 +99,9 @@ class LineParser {
 		activeNode.children.push(node);
 		if (this.options.debug) console.log('addNode', this.indentStack, activeNode.type, ' > ', node.type);
 
-		if (['PARAGRAPH', 'UNORDERED_LIST', 'ORDERED_LIST', 'BLOCK_QUOTE', 'BLOCK_CODE'].includes(node.type)) {
+		if (['PARAGRAPH', 'UNORDERED_LIST', 'ORDERED_LIST', 'BLOCK_QUOTE', 'BLOCK_CODE', 'TABLE'].includes(node.type)
+			|| forcePushToIndentStack
+		) {
 			this.indentStack.push(newIndent);
 		}
 	};
@@ -111,6 +119,7 @@ class LineParser {
 			this.current++;
 		}
 
+		if (this.options['line-ast'] || this.options.debug) console.log(`${JSON.stringify(this.ast, null, 4)}\n`);
 		return this.ast;
 	};
 
@@ -119,6 +128,13 @@ class LineParser {
 		let newActiveNode: BlockNode;
 
 		if (token.type === 'EMPTY_LINE') {
+			const activeNode = this.activeNode();
+			if (activeNode.type === 'TABLE') {
+				this.indentStack.pop();
+			} else if (activeNode.type === 'TABLE_ROW') {
+				this.indentStack.pop();
+				this.indentStack.pop();
+			}
 			return;
 		}
 
@@ -182,6 +198,7 @@ class LineParser {
 
 		if (token.type === 'LINE_WITH_LIST_ITEM_MARK') {
 			const listType = token.marker === '-' ? 'UNORDERED_LIST' : 'ORDERED_LIST';
+			// add this.checkForAttributes()
 			if (this.increasedIndent(token.indent)) {
 				const newActiveNode = new BlockNode(listType);
 				this.addNode(newActiveNode, token.indent);
@@ -213,6 +230,47 @@ class LineParser {
 				attributes: parseAttributes(token.attributes),
 			});
 			this.addNode(newActiveNode, token.indent);
+			return;
+		}
+
+		if (token.type === 'LINE_WITH_TABLE_ROW_MARK') {
+			// add this.checkForAttributes()
+			if (this.activeNode().type !== 'TABLE') {
+				this.addNode(new BlockNode('TABLE'), token.indent);
+			}
+			this.addNode(new BlockNode('TABLE_ROW', {
+				content: token.text,
+				attributes: parseAttributes(token.attributes),
+			}), token.indent);
+			return;
+		}
+
+		if (token.type === 'LINE_WITH_TABLE_ROW_SEPARATOR_MARK') {
+			// add this.checkForAttributes()
+			if (this.activeNode().type !== 'TABLE' && this.activeNode().type !== 'TABLE_ROW') {
+				this.addNode(new BlockNode('TABLE'), token.indent);
+			}
+			newActiveNode = new BlockNode('TABLE_ROW', {
+				attributes: parseAttributes(token.attributes),
+			});
+			this.addNode(newActiveNode, token.indent, true);
+			return;
+		}
+
+		if (token.type === 'LINE_WITH_TABLE_CELL_MARK') {
+			// add this.checkForAttributes()
+			if (this.activeNode().type !== 'TABLE' && this.activeNode().type !== 'TABLE_ROW') {
+				this.addNode(new BlockNode('TABLE'), token.indent);
+				newActiveNode = new BlockNode('TABLE_ROW', {
+					attributes: parseAttributes(token.attributes),
+				});
+				this.addNode(newActiveNode, token.indent, true);
+			}
+			this.addNode(new BlockNode('TABLE_CELL', {
+				subtype: token.marker,
+				content: token.text,
+				attributes: parseAttributes(token.attributes),
+			}), token.indent);
 			return;
 		}
 	};

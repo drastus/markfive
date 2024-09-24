@@ -2,10 +2,11 @@ import type BlockNode from './block-node';
 import {attributesRegexString, findIndexInRange} from './helpers';
 import InlineNode from './inline-node';
 import type {
+	BlockNodeType,
 	InlineNodeType, InlineToken, InlineTokenType, Node, Options,
 } from './types';
 
-const specialChars = /[+*[\]{}"'`:~^!/_=-]/;
+const specialChars = /[+*[\]{}"'`:~^!|/_=-]/;
 
 const commonTokens: Array<{chars: string, type: InlineTokenType}> = [
 	{chars: '!!', type: 'B'},
@@ -19,6 +20,10 @@ const commonTokens: Array<{chars: string, type: InlineTokenType}> = [
 	{chars: ':', type: 'DFN'},
 	{chars: '~', type: 'VAR'},
 	{chars: '`', type: 'CODE'},
+];
+const tableRowTokens: Array<{chars: string, type: InlineTokenType}> = [
+	{chars: '|', type: 'TD'},
+	{chars: '!', type: 'TH'},
 ];
 
 const selfNestableTokenTypes = ['B', 'I', 'EM', 'STRONG', 'MARK'];
@@ -45,7 +50,7 @@ class InlineParser {
 
 	parseNode = (node: BlockNode) => {
 		if (node.content ?? node.tokens) {
-			node.tokens ||= this.getNodeTokens(node.content!);
+			node.tokens ||= this.getNodeTokens(node.content!, node.type);
 			this.parseTokenizedNode(node);
 		}
 		if (node.children) {
@@ -64,9 +69,13 @@ class InlineParser {
 		}
 	};
 
-	getNodeTokens = (content: string) => {
+	getNodeTokens = (content: string, type: BlockNodeType) => {
 		const tokens: InlineToken[] = [];
 		let index = 0;
+
+		const availableTokens = type === 'TABLE_ROW'
+			? commonTokens.concat(tableRowTokens)
+			: commonTokens;
 
 		while (index < content.length) {
 			const nextSpecialCharIndex = content.slice(index).search(specialChars);
@@ -79,10 +88,10 @@ class InlineParser {
 				break;
 			}
 
-			for (const {chars, type} of commonTokens) {
+			for (const {chars, type} of availableTokens) {
 				if (content[index + nextSpecialCharIndex] === chars[0]) {
 					if (chars.length === 2 && content[index + nextSpecialCharIndex + 1] !== chars[1]) {
-						break;
+						continue; // optimize
 					}
 					if (nextSpecialCharIndex > 0) {
 						this.addTextToken(tokens, content.slice(index, index + nextSpecialCharIndex));
@@ -93,7 +102,10 @@ class InlineParser {
 					const nextIsAlphanumeric = /^(\p{L}|\p{M}|\p{N})/u.test(content[index + nextSpecialCharIndex + consumedChars] ?? '');
 					const prevIsWhitespace = /^(\p{Z})/u.test(content[index + nextSpecialCharIndex - 1] ?? '');
 					const nextIsWhitespace = /^(\p{Z})/u.test(content[index + nextSpecialCharIndex + consumedChars] ?? '');
-					if ((prevIsAlphanumeric && nextIsAlphanumeric) || (prevIsWhitespace && nextIsWhitespace)) {
+					if ((prevIsAlphanumeric && nextIsAlphanumeric)
+						|| ((prevIsWhitespace && nextIsWhitespace) && !['TD', 'TH'].includes(type))
+						|| ((prevIsAlphanumeric || nextIsAlphanumeric) && ['TD', 'TH'].includes(type))
+					) {
 						this.addTextToken(tokens, content.slice(
 							index + nextSpecialCharIndex,
 							index + nextSpecialCharIndex + consumedChars,
@@ -191,6 +203,15 @@ class InlineParser {
 					this.addTextNode(node.children, token.text!);
 					index++;
 				}
+			} else if (['TD', 'TH'].includes(token.type)) {
+				const nextCellTokenIndex = findIndexInRange<InlineToken>(
+					tokens, (t) => ['TD', 'TH'].includes(t.type), index + 1,
+				) ?? tokens.length;
+				const newNode = new InlineNode(token.type as InlineNodeType, {
+					tokens: tokens.slice(index + 1, nextCellTokenIndex),
+				});
+				node.children.push(newNode);
+				index = nextCellTokenIndex;
 			} else if (token.position?.includes('start')) {
 				let closeTokenIndex: number | undefined;
 				if (selfNestableTokenTypes.includes(token.type)) {
