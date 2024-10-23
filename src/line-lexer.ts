@@ -135,6 +135,16 @@ class LineLexer {
 			return;
 		}
 
+		if (match = line.match('^([ \t]*)(\\$\\$)(.+)(\\$\\$)')) {
+			this.tokens.push({
+				type: 'LINE_WITH_MATH_MARK',
+				line,
+				indent: match[1],
+				text: `${match[2]}${match[3]}${match[4]}`,
+			});
+			return;
+		}
+
 		this.tokens.push({
 			type: 'TEXT_LINE',
 			line,

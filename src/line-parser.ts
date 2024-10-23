@@ -273,6 +273,13 @@ class LineParser {
 			}), token.indent);
 			return;
 		}
+
+		if (token.type === 'LINE_WITH_MATH_MARK') {
+			this.addNode(new BlockNode('BLOCK_MATH', {
+				content: token.text,
+			}), token.indent);
+			return;
+		}
 	};
 }
 

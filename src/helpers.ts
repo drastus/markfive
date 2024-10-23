@@ -61,3 +61,7 @@ export const findIndexInRange = <T>(array: T[], predicate: (item: T) => unknown,
 	if (to !== undefined && from + index > to) return undefined;
 	return from + index;
 };
+
+export const trimAndJoin = (array: string[]) => array
+	.map((item) => item.trim())
+	.join('\n');

@@ -73,6 +73,11 @@ class InlineParser {
 		const tokens: InlineToken[] = [];
 		let index = 0;
 
+		if (type === 'BLOCK_MATH') {
+			this.addTextToken(tokens, content);
+			return tokens;
+		}
+
 		const availableTokens = type === 'TABLE_ROW'
 			? commonTokens.concat(tableRowTokens)
 			: commonTokens;
