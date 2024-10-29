@@ -10,10 +10,11 @@
 		],
 		"module": "ESNext",
 		"moduleResolution": "node",
+		"noUncheckedIndexedAccess": true,
 		"outDir": "./lib",
 		"skipLibCheck": true,
 		"sourceMap": true,
-		"strictNullChecks": true,
+		"strict": true,
 		"target": "ES6"
 	},
 	"compileOnSave": true

@@ -27,7 +27,7 @@ class LineLexer {
 	};
 
 	tokenizeLine = () => {
-		const line = this.lines[this.current];
+		const line = this.lines[this.current]!;
 		let match: RegExpMatchArray | null = null;
 
 		if (line.length === 0) {
@@ -49,7 +49,7 @@ class LineLexer {
 						line: this.lines[this.current - 1],
 						marker: line,
 						level: index + 1,
-						text: this.lines[this.current - 1].trimStart(),
+						text: this.lines[this.current - 1]!.trimStart(),
 					});
 				} else {
 					this.tokens.push({type: 'TEXT_LINE', text: line});

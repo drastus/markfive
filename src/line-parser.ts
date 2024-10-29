@@ -23,13 +23,13 @@ class LineParser {
 		let node = this.ast;
 		let depth = 0;
 		while (depth < this.indentStack.length) {
-			node = node.children[node.children.length - 1];
+			node = node.children[node.children.length - 1]!;
 			depth++;
 		}
 		return node;
 	};
 
-	prevToken = () => this.tokens[this.current - 1];
+	prevToken = () => this.tokens[this.current - 1]!;
 
 	isOpenPosition = () => {
 		if (this.current === 0) return true;
@@ -38,7 +38,7 @@ class LineParser {
 		} else if (this.prevToken().type === 'LINE_WITH_LIST_ITEM_MARK' && !this.prevToken().text) {
 			return true;
 		} else if (this.prevToken().type === 'LINE_WITH_ATTRIBUTES') {
-			if (this.tokens[this.current - 2].type === 'EMPTY_LINE' || this.tokens[this.current - 2] === undefined) {
+			if (this.tokens[this.current - 2]!.type === 'EMPTY_LINE' || this.tokens[this.current - 2] === undefined) {
 				return true;
 			}
 		}
@@ -55,13 +55,13 @@ class LineParser {
 
 	increasedIndent = (indent = '') => {
 		const newIndent = calculateIndent(indent);
-		return newIndent > this.indentStack[this.indentStack.length - 1];
+		return newIndent > this.indentStack[this.indentStack.length - 1]!;
 	};
 
 	updateIndentStack = (node: BlockNode, indent: number) => {
 		const activeNode = this.activeNode();
 		const isSubnodeOfListItem = (
-			indent > this.indentStack[this.indentStack.length - 1]
+			indent > this.indentStack[this.indentStack.length - 1]!
 				&& this.prevToken().type === 'LINE_WITH_LIST_ITEM_MARK'
 				&& !this.prevToken().text
 		);
@@ -82,7 +82,7 @@ class LineParser {
 			this.indentStack = [];
 		}
 
-		if (indent < this.indentStack[this.indentStack.length - 1]) {
+		if (indent < this.indentStack[this.indentStack.length - 1]!) {
 			const newIndentStackEnd = this.indentStack.findIndex((i) => i >= indent);
 			this.indentStack = this.indentStack.slice(0, newIndentStackEnd + 1);
 		} else if (isSubnodeOfListItem) {
@@ -124,7 +124,7 @@ class LineParser {
 	};
 
 	parseToken = () => {
-		const token = this.tokens[this.current];
+		const token = this.tokens[this.current]!;
 		let newActiveNode: BlockNode;
 
 		if (token.type === 'EMPTY_LINE') {
@@ -139,7 +139,7 @@ class LineParser {
 		}
 
 		if (token.type === 'LINE_WITH_ATTRIBUTES') {
-			if (!this.tokens[this.current + 1] || this.tokens[this.current + 1].type !== 'EMPTY_LINE') {
+			if (!this.tokens[this.current + 1] || this.tokens[this.current + 1]!.type !== 'EMPTY_LINE') {
 				this.lastAttributes = token.attributes; // lastAttributes later taken as attrs or as a text node by addNewNode
 			} else {
 				this.addTextNode(token);

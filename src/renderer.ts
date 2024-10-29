@@ -3,7 +3,6 @@ import {stringifyAttributes, trimAndJoin} from './helpers';
 import type {Node, Options} from './types';
 
 const elementMappings: Record<string, string> = {
-	DOCUMENT: 'BODY',
 	PARAGRAPH: 'P',
 	ORDERED_LIST: 'OL',
 	UNORDERED_LIST: 'UL',
@@ -58,9 +57,8 @@ class Renderer {
 		return '\n';
 	};
 
-	render = () => {
-		if (this.options.debug) console.log('Renderer render\n');
-		const body = this.renderNode(this.ast);
+	preview = (body: string) => {
+		if (this.options.debug) console.log('Renderer preview\n');
 		const result = trimAndJoin([
 			'<!DOCTYPE html>',
 			'<HTML>',
@@ -69,17 +67,32 @@ class Renderer {
 			`<META charset="UTF-8">${this.getTopScripts()}`,
 			'<META name="viewport" content="width=device-width, initial-scale=1.0">',
 			'</HEAD>',
+			'<BODY>',
 			body,
+			this.getBottomScripts(),
+			'</BODY>',
 			'</HTML>',
 			'',
 		]);
-		process.stdout.write(result);
+		return result;
+	};
+
+	render = () => {
+		if (this.options.debug) console.log('Renderer render\n');
+		return this.renderNode(this.ast);
 	};
 
 	renderNode = (node: Node) => {
+		if (node.type === 'DOCUMENT') {
+			let string = '';
+			node.children.forEach((child: Node) => {
+				string += this.renderNode(child);
+			});
+			return string;
+		}
 		let elementType = elementMappings[node.type] ?? node.type;
 		if (elementType === 'HEADING') elementType = `H${(node as BlockNode).subtype}`;
-		if (elementType === 'TABLE_CELL') elementType = tableCellElementMappings[(node as BlockNode).subtype!];
+		if (elementType === 'TABLE_CELL') elementType = tableCellElementMappings[(node as BlockNode).subtype!]!;
 		if (elementType === 'TEXT') {
 			return node.content!;
 		}
@@ -117,7 +130,6 @@ class Renderer {
 			node.children.forEach((child: Node) => {
 				string += this.renderNode(child);
 			});
-			if (elementType === 'BODY') string += this.getBottomScripts();
 			string += `</${elementType}>`;
 			if (node instanceof BlockNode) string += '\n';
 			return string;

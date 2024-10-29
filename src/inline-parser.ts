@@ -54,8 +54,8 @@ class InlineParser {
 			this.parseTokenizedNode(node);
 		}
 		if (node.children) {
-			node.children.forEach((child: BlockNode) => {
-				this.parseNode(child);
+			node.children.forEach((child) => {
+				this.parseNode(child as BlockNode);
 			});
 		}
 	};
@@ -191,7 +191,7 @@ class InlineParser {
 		let index = 0;
 
 		while (index < tokens.length) {
-			const token = tokens[index];
+			const token = tokens[index]!;
 
 			if (token.type === 'BRACKET_OPEN') {
 				const closeTokenIndex = findIndexInRange<InlineToken>(
@@ -200,7 +200,7 @@ class InlineParser {
 				if (closeTokenIndex !== undefined) {
 					const newNode = new InlineNode('A', {
 						tokens: tokens.slice(index + 1, closeTokenIndex),
-						attributes: {href: tokens[closeTokenIndex].defaultAttribute!},
+						attributes: {href: tokens[closeTokenIndex]!.defaultAttribute!},
 					});
 					node.children.push(newNode);
 					index = closeTokenIndex + 1;
@@ -228,7 +228,7 @@ class InlineParser {
 							tokens, (t) => t.type === token.type, startIndex,
 						);
 						if (newTokenIndex !== undefined) {
-							if (tokens[newTokenIndex].position?.includes('end') && newTokenIndex > startIndex) {
+							if (tokens[newTokenIndex]!.position?.includes('end') && newTokenIndex > startIndex) {
 								closeTokenIndex = newTokenIndex;
 								depth -= 1;
 							} else {
@@ -258,7 +258,7 @@ class InlineParser {
 				index++;
 			}
 		}
-		if (node.type === 'TEXT' && node.children.length === 1 && node.children[0].type === 'TEXT') {
+		if (node.type === 'TEXT' && node.children.length === 1 && node.children[0]!.type === 'TEXT') {
 			node.children = [];
 		}
 		if (!this.options.debug) {

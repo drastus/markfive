@@ -27,7 +27,12 @@ class Markfive {
 
 				if (!this.options.ast) {
 					const renderer = new Renderer(ast, this.options);
-					renderer.render();
+					let result = renderer.render();
+
+					if (this.options.preview) {
+						result = renderer.preview(result);
+					}
+					process.stdout.write(result);
 				}
 			}
 		}

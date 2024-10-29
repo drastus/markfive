@@ -37,12 +37,13 @@ export const parseAttributes = (attributesString?: string) => {
 	return attributes;
 };
 
-export const stringifyAttributes = (attributes?: object) => {
+export const stringifyAttributes = (attributes?: Record<string, string | string[]>) => {
 	let string = '';
 	if (!attributes) return string;
-	Object.keys(attributes).forEach((attributeName) => {
-		string += ` ${attributeName}="${attributes[attributeName]}"`;
-	});
+	for (const [attributeName, attributeValue] of Object.entries(attributes)) {
+		const value = Array.isArray(attributeValue) ? attributeValue.join(' ') : attributeValue;
+		string += ` ${attributeName}="${value}"`;
+	}
 	return string;
 };
 

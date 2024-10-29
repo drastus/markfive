@@ -6,6 +6,7 @@ export type Options = {
 	'line-ast': boolean,
 	ast: boolean,
 	debug: boolean,
+	preview: boolean,
 };
 
 export type LineTokenType =
