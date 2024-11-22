@@ -1,6 +1,7 @@
 /* eslint-disable no-useless-return */
 import BlockNode from './block-node';
 import {calculateIndent, parseAttributes} from './helpers';
+import {markfiveMathToMathML} from './math-parser';
 import {type Options, type LineToken, type Node} from './types';
 
 class LineParser {
@@ -276,7 +277,7 @@ class LineParser {
 
 		if (token.type === 'LINE_WITH_MATH_MARK') {
 			this.addNode(new BlockNode('BLOCK_MATH', {
-				content: token.text,
+				content: markfiveMathToMathML(token.text!, this.options.debug),
 			}), token.indent);
 			return;
 		}

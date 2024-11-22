@@ -3,17 +3,17 @@ import {stringifyAttributes, trimAndJoin} from './helpers';
 import type {Node, Options} from './types';
 
 const elementMappings: Record<string, string> = {
-	PARAGRAPH: 'P',
-	ORDERED_LIST: 'OL',
-	UNORDERED_LIST: 'UL',
-	LIST_ITEM: 'LI',
-	TABLE_ROW: 'TR',
+	PARAGRAPH: 'p',
+	ORDERED_LIST: 'ol',
+	UNORDERED_LIST: 'ul',
+	LIST_ITEM: 'li',
+	TABLE_ROW: 'tr',
 };
 const tableCellElementMappings: Record<string, string> = {
-	'|': 'TD',
-	'!': 'TH',
+	'|': 'td',
+	'!': 'th',
 };
-const mainBlockElements = ['BODY', 'TABLE', 'TR', 'OL', 'UL'];
+const mainBlockElements = ['body', 'table', 'tr', 'ol', 'ul'];
 
 class Renderer {
 	ast: Node;
@@ -37,41 +37,25 @@ class Renderer {
 			return trimAndJoin([
 				'',
 				`<LINK rel="stylesheet" href="${cdnUrl}${temmlPkg}/dist/Temml-Local.css">`,
-				`<SCRIPT src="${cdnUrl}${temmlPkg}/dist/temml.min.js"></SCRIPT>`,
-				`<SCRIPT src="${cdnUrl}${temmlPkg}/contrib/auto-render/dist/auto-render.min.js"></SCRIPT>`,
 			]);
 		}
 		return '';
-	};
-
-	getBottomScripts = () => {
-		if (this.isMathUsed) {
-			return trimAndJoin([
-				'<SCRIPT>',
-				'const mathElements = document.getElementsByClassName("math");',
-				'for (let i = 0; i < mathElements.length; i++) renderMathInElement(mathElements[i], {delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}]});',
-				'</SCRIPT>',
-				'',
-			]);
-		}
-		return '\n';
 	};
 
 	preview = (body: string) => {
 		if (this.options.debug) console.log('Renderer preview\n');
 		const result = trimAndJoin([
 			'<!DOCTYPE html>',
-			'<HTML>',
-			'<HEAD>',
-			'<TITLE>Markfive</TITLE>',
-			`<META charset="UTF-8">${this.getTopScripts()}`,
-			'<META name="viewport" content="width=device-width, initial-scale=1.0">',
-			'</HEAD>',
-			'<BODY>',
+			'<html>',
+			'<head>',
+			'<title>Markfive</title>',
+			`<meta charset="UTF-8">${this.getTopScripts()}`,
+			'<meta name="viewport" content="width=device-width, initial-scale=1.0">',
+			'</head>',
+			'<body>',
 			body,
-			this.getBottomScripts(),
-			'</BODY>',
-			'</HTML>',
+			'</body>',
+			'</html>',
 			'',
 		]);
 		return result;
@@ -83,6 +67,8 @@ class Renderer {
 	};
 
 	renderNode = (node: Node) => {
+		let elementType;
+
 		if (node.type === 'DOCUMENT') {
 			let string = '';
 			node.children.forEach((child: Node) => {
@@ -90,36 +76,34 @@ class Renderer {
 			});
 			return string;
 		}
-		let elementType = elementMappings[node.type] ?? node.type;
-		if (elementType === 'HEADING') elementType = `H${(node as BlockNode).subtype}`;
-		if (elementType === 'TABLE_CELL') elementType = tableCellElementMappings[(node as BlockNode).subtype!]!;
-		if (elementType === 'TEXT') {
+		if (node.type === 'HEADING') elementType = `h${(node as BlockNode).subtype}`;
+		if (node.type === 'TABLE_CELL') elementType = tableCellElementMappings[(node as BlockNode).subtype!]!;
+		if (node.type === 'TEXT') {
 			return node.content!;
 		}
-		if (elementType === 'LINE') {
+		if (node.type === 'LINE') {
 			let string = '';
-			if (this.newlineRequired) string = this.newlineMode === 'br' ? '<BR>\n' : '\n';
+			if (this.newlineRequired) string = this.newlineMode === 'br' ? '<br>\n' : '\n';
 			node.children.forEach((child: Node) => {
 				string += this.renderNode(child);
 			});
 			this.newlineRequired = true;
 			return string;
 		}
-		if (elementType === 'BLOCK_CODE') {
+		if (node.type === 'BLOCK_CODE') {
 			this.newlineMode = 'n';
-			let string = `<PRE${stringifyAttributes(node.attributes)}><CODE>`;
+			let string = `<pre${stringifyAttributes(node.attributes)}><code>`;
 			node.children.forEach((child: Node) => {
 				string += this.renderNode(child);
 			});
-			return `${string}</CODE></PRE>\n`;
+			return `${string}</code></pre>\n`;
 		}
-		if (elementType === 'BLOCK_MATH') {
+		if (node.type === 'BLOCK_MATH') {
 			this.isMathUsed = true;
-			let string = '<DIV class="math">';
-			node.children.forEach((child: Node) => {
-				string += this.renderNode(child);
-			});
-			return `${string}</DIV>\n`;
+			return `${node.content}\n`;
+		}
+		if (!elementType) {
+			elementType = elementMappings[node.type] ?? node.type.toLowerCase()
 		}
 
 		this.newlineMode = 'br';

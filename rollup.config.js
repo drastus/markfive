@@ -1,4 +1,5 @@
 import typescript from '@rollup/plugin-typescript';
+import {nodeResolve} from '@rollup/plugin-node-resolve';
 
 export default [
 	{
@@ -8,7 +9,7 @@ export default [
 			format: 'cjs',
 			sourcemap: true,
 		},
-		plugins: [typescript()],
+		plugins: [typescript(), nodeResolve()],
 	},
 	{
 		input: 'src/cli.ts',
@@ -19,6 +20,6 @@ export default [
 			entryFileNames: '[name].cjs',
 		},
 		external: ['node:fs'],
-		plugins: [typescript()],
+		plugins: [typescript(), nodeResolve()],
 	},
 ];

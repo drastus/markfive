@@ -140,7 +140,7 @@ class LineLexer {
 				type: 'LINE_WITH_MATH_MARK',
 				line,
 				indent: match[1],
-				text: `${match[2]}${match[3]}${match[4]}`,
+				text: match[3],
 			});
 			return;
 		}

@@ -67,7 +67,8 @@ export type InlineTokenType =
 	| 'U'
 	| 'S'
 	| 'TD'
-	| 'TH';
+	| 'TH'
+	| 'MATH';
 
 export type InlineNodeType =
 	| 'TEXT'

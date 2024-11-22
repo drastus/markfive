@@ -1,0 +1,25 @@
+$$ x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a} $$
+
+$$ E = mc^2 $$
+
+$$ F = G\frac{m_1m_2}{r^2} $$
+
+$$ \oint_S \mathbf{E} \cdot d\mathbf{A} = \frac{Q}{\varepsilon_0} $$
+
+$$ \frac{d^2x}{dt^2} = -\frac{k}{m}x $$
+
+$$ \psi(x,t) = Ae^{i(kx-\omega t)} $$
+
+$$ \Delta S \geq 0 $$
+
+$$ PV = nRT $$
+
+$$ F = -k\frac{dU}{dx} $$
+
+$$ \nabla \times \mathbf{B} = \mu_0\mathbf{J} + \mu_0\varepsilon_0\frac{\partial \mathbf{E}}{\partial t} $$
+
+$$ i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi $$
+
+$$ S = k_B\ln W $$
+
+$$ \frac{1}{T_1} + \frac{1}{T_2} = \frac{1}{f} $$

@@ -74,7 +74,7 @@ class InlineParser {
 		let index = 0;
 
 		if (type === 'BLOCK_MATH') {
-			this.addTextToken(tokens, content);
+			tokens.push({type: 'MATH', text: content});
 			return tokens;
 		}
 
@@ -193,6 +193,10 @@ class InlineParser {
 		while (index < tokens.length) {
 			const token = tokens[index]!;
 
+			if (token.type === 'MATH') {
+				index++;
+				continue;
+			}
 			if (token.type === 'BRACKET_OPEN') {
 				const closeTokenIndex = findIndexInRange<InlineToken>(
 					tokens, (t) => t.type === 'BRACKET_CLOSE' && t.defaultAttribute, index + 1,
