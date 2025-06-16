@@ -11,4 +11,5 @@ Running test:
 
 Writing test to HTML file:
 
-	markfive test/test.mf > test/result.html
+	markfive test/test.mf > test/test.part.html
+	markfive --preview test/test.mf > test/test.html

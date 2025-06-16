@@ -8,6 +8,7 @@ const elementMappings: Record<string, string> = {
 	UNORDERED_LIST: 'ul',
 	LIST_ITEM: 'li',
 	TABLE_ROW: 'tr',
+	SEPARATOR: 'hr',
 };
 const tableCellElementMappings: Record<string, string> = {
 	'|': 'td',
@@ -102,9 +103,9 @@ class Renderer {
 			this.isMathUsed = true;
 			return `${node.content}\n`;
 		}
-		if (!elementType) {
-			elementType = elementMappings[node.type] ?? node.type.toLowerCase()
-		}
+		elementType ||= elementMappings[node.type] ?? node.type.toLowerCase();
+
+		if (this.options.debug) console.log('renderNode', node.type, elementType, node.attributes ?? '');
 
 		this.newlineMode = 'br';
 		this.newlineRequired = false;

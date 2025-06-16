@@ -1,0 +1,16 @@
++ Basic elements
++ Basic lists
++ Basic tables
++ Basic math
++ Separators (hr)
+- Var
+- Superscripts & subscripts
+- Notes
+- Images
+- Typography
+- Templates
+- Abbreviations
+- Small
+- Definition lists
+- Quotes and blockquotes
+- Edits

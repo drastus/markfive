@@ -176,10 +176,12 @@ function unparseAtom(atom: Atom): string {
 
 	const ordgroupIndex = body.findIndex((subatom) => subatom.type === 'ordgroup');
 	const setOperations = [
+		/* eslint-disable array-element-newline */
 		'\\subset', '\\supset', '\\subseteq', '\\supseteq', '\\in', '\\ni', '\\not\\in', '\\not\\ni',
 		'=', '⊂', '⊃', '⊆', '⊇', '∈', '∋', '∉', '∌',
 		'\\cup', '\\cap', '\\setminus', '\\bigtriangleup', '\\vartriangle',
 		'∪', '∩', '∖', '△',
+		/* eslint-enable array-element-newline */
 	];
 	if ((ordgroupIndex === 0 && body.length > 1)
 		|| (ordgroupIndex > 0 && setOperations.includes(body[ordgroupIndex - 1]!.text ?? ''))
