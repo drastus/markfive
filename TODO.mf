@@ -6,11 +6,18 @@
 - Var
 - Superscripts & subscripts
 - Notes
-- Images
 - Typography
+- Front matter
 - Templates
 - Abbreviations
-- Small
+- Images
 - Definition lists
 - Quotes and blockquotes
+- Entities
+- Escaping
+- Small
 - Edits
+- Comments
+- Other HTML elements
+- Metadata variables
+- Indices

@@ -1,24 +1,24 @@
 import type BlockNode from './block-node';
-import {attributesRegexString, findIndexInRange} from './helpers';
+import {attributesRegexString, findIndexInRange, parseAttributes} from './helpers';
 import InlineNode from './inline-node';
 import type {
 	BlockNodeType,
 	InlineNodeType, InlineToken, InlineTokenType, Node, Options,
 } from './types';
 
-const specialChars = /[+*[\]{}"'`:~^!|/_=-]/;
+const specialChars = /[#*[\]{}"'`:~^!|/_=-]/;
 
 const commonTokens: Array<{chars: string, type: InlineTokenType}> = [
-	{chars: '!!', type: 'B'},
-	{chars: '//', type: 'I'},
+	{chars: '#', type: 'B'},
+	{chars: '/', type: 'I'},
 	{chars: '__', type: 'U'},
-	{chars: '~~', type: 'S'},
+	{chars: '--', type: 'S'},
 	{chars: '\'\'', type: 'CITE'},
-	{chars: '+', type: 'EM'},
+	{chars: '~', type: 'EM'},
 	{chars: '*', type: 'STRONG'},
 	{chars: '=', type: 'MARK'},
 	{chars: ':', type: 'DFN'},
-	{chars: '~', type: 'VAR'},
+	{chars: '$', type: 'VAR'},
 	{chars: '`', type: 'CODE'},
 ];
 const tableRowTokens: Array<{chars: string, type: InlineTokenType}> = [
@@ -192,6 +192,7 @@ class InlineParser {
 
 		while (index < tokens.length) {
 			const token = tokens[index]!;
+			let attributes: Record<string, string | string[]> | undefined;
 
 			if (token.type === 'MATH') {
 				index++;
@@ -234,6 +235,9 @@ class InlineParser {
 						if (newTokenIndex !== undefined) {
 							if (tokens[newTokenIndex]!.position?.includes('end') && newTokenIndex > startIndex) {
 								closeTokenIndex = newTokenIndex;
+								if (tokens[newTokenIndex]!.attributes) {
+									attributes = parseAttributes(tokens[newTokenIndex]!.attributes);
+								}
 								depth -= 1;
 							} else {
 								depth += 1;
@@ -249,7 +253,7 @@ class InlineParser {
 				if (closeTokenIndex !== undefined) {
 					const newNode = new InlineNode(
 						token.type as InlineNodeType,
-						{tokens: tokens.slice(index + 1, closeTokenIndex)},
+						{tokens: tokens.slice(index + 1, closeTokenIndex), attributes},
 					);
 					node.children.push(newNode);
 					index = closeTokenIndex + 1;

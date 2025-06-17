@@ -4,18 +4,18 @@ Document title
 Chapter 1
 =========
 
-First parag+raph. The +second+ sentence !!includes!! a [link](https://en.wikipedia.org/wiki/Requiem_(Verdi)).
-The third sentence! is in the new line.
+First parag~raph. The ~second~ sentence #includes# a [link](https://en.wikipedia.org/wiki/Requiem_(Verdi)).
+The third sentence# is in the new line.
 
 {style="color: orange"}
-+Second+ paragraph.
+~Second~ paragraph.
 
 * * *
 
 The next line contains math:
 $$ E = \frac{mc^2}{\sqrt{1-\frac{v^2}{c^2}}} $$
 
-A recent meta-analysis of prospective studies in the general population found that +the risk of all-cause mortality +increased by +33.5%+ for each 5 μmol/L increase+ in homocysteine+. However, +there was +significant+ heterogeneity among studies+, which could be due to differences in folate intake patterns, serum folate levels, or genetic variations.
+A recent meta-analysis of prospective studies in the general population found that ~the risk of all-cause mortality ~increased by ~33.5%~ for each 5 μmol/L increase~ in homocysteine~. However, ~there was ~significant~ heterogeneity among studies~, which could be due to differences in folate intake patterns, serum folate levels, or genetic variations.
 
 
 Chapter 2
@@ -25,7 +25,7 @@ List:
 1. First element
 2. Second element
 	1. Second *first*{lang=en} element
-	2. Second second element
+	2. Second second /élément/{lang=fr}
 3. Third element
 
 Subchapter 1
