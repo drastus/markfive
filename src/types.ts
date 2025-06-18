@@ -83,7 +83,8 @@ export type InlineNodeType =
 	| 'I'
 	| 'U'
 	| 'S'
-	| 'A';
+	| 'A'
+	| 'INLINE_MATH';
 
 export type InlineToken = {
 	type: InlineTokenType,

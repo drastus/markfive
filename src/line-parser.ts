@@ -277,7 +277,7 @@ class LineParser {
 
 		if (token.type === 'LINE_WITH_MATH_MARK') {
 			this.addNode(new BlockNode('BLOCK_MATH', {
-				content: markfiveMathToMathML(token.text!, this.options.debug),
+				content: markfiveMathToMathML(token.text!, true, this.options.debug),
 			}), token.indent);
 			return;
 		}

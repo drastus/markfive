@@ -218,7 +218,7 @@ function applyUnicodeSymbols(expression: string): string {
 	return expression.replace(/√/g, '\\sqrt').replace(/∛/g, '\\sqrt[3]');
 }
 
-export function markfiveMathToMathML(expression: string, debug = false): string {
+export function markfiveMathToMathML(expression: string, displayMode: boolean, debug = false): string {
 	const parseTree = Temml.__parse(applyUnicodeSymbols(expression)) as Atom[];
 	const result = unparseAtom({type: 'ordgroup', mode: 'math', body: parseTree});
 	if (debug) {
@@ -229,5 +229,5 @@ export function markfiveMathToMathML(expression: string, debug = false): string 
 			));
 		});
 	}
-	return Temml.renderToString(result, {displayMode: true});
+	return Temml.renderToString(result, {displayMode});
 }

@@ -15,6 +15,8 @@ The third sentence# is in the new line.
 The next line contains math:
 $$ E = \frac{mc^2}{\sqrt{1-\frac{v^2}{c^2}}} $$
 
+Here, $E$ is energy. Similar equation is $E=mc^2$.
+
 A recent meta-analysis of prospective studies in the general population found that ~the risk of all-cause mortality ~increased by ~33.5%~ for each 5 μmol/L increase~ in homocysteine~. However, ~there was ~significant~ heterogeneity among studies~, which could be due to differences in folate intake patterns, serum folate levels, or genetic variations.
 
 

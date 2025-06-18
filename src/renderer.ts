@@ -77,8 +77,8 @@ class Renderer {
 			});
 			return string;
 		}
-		if (node.type === 'HEADING') elementType = `h${(node as BlockNode).subtype}`;
-		if (node.type === 'TABLE_CELL') elementType = tableCellElementMappings[(node as BlockNode).subtype!]!;
+		if (node.type === 'HEADING') elementType = `h${node.subtype}`;
+		if (node.type === 'TABLE_CELL') elementType = tableCellElementMappings[node.subtype!]!;
 		if (node.type === 'TEXT') {
 			return node.content!;
 		}
@@ -101,7 +101,11 @@ class Renderer {
 		}
 		if (node.type === 'BLOCK_MATH') {
 			this.isMathUsed = true;
-			return `${node.content}\n`;
+			return node.content + '\n';
+		}
+		if (node.type === 'INLINE_MATH') {
+			this.isMathUsed = true;
+			return node.children[0]?.content ?? '';
 		}
 		elementType ||= elementMappings[node.type] ?? node.type.toLowerCase();
 

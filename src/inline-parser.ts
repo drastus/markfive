@@ -1,12 +1,12 @@
 import type BlockNode from './block-node';
 import {attributesRegexString, findIndexInRange, parseAttributes} from './helpers';
 import InlineNode from './inline-node';
+import {markfiveMathToMathML} from './math-parser';
 import type {
-	BlockNodeType,
-	InlineNodeType, InlineToken, InlineTokenType, Node, Options,
+	BlockNodeType, InlineNodeType, InlineToken, InlineTokenType, Node, Options,
 } from './types';
 
-const specialChars = /[#*[\]{}"'`:~^!|/_=-]/;
+const specialChars = /[#*[\]{}"'`:~^!|/_=$-]/;
 
 const commonTokens: Array<{chars: string, type: InlineTokenType}> = [
 	{chars: '#', type: 'B'},
@@ -251,10 +251,22 @@ class InlineParser {
 					);
 				}
 				if (closeTokenIndex !== undefined) {
-					const newNode = new InlineNode(
+					let newNode = new InlineNode(
 						token.type as InlineNodeType,
 						{tokens: tokens.slice(index + 1, closeTokenIndex), attributes},
 					);
+					if (token.type === 'VAR') {
+						const contentText = tokens.slice(index + 1, closeTokenIndex).map((t) => t.text).join('');
+						if (!this.canBeVar(contentText)) {
+							newNode = new InlineNode(
+								'INLINE_MATH',
+								{
+									content: markfiveMathToMathML(contentText, false, this.options.debug),
+									attributes,
+								},
+							);
+						}
+					}
 					node.children.push(newNode);
 					index = closeTokenIndex + 1;
 				} else {
@@ -274,6 +286,10 @@ class InlineParser {
 			if (node.children.length > 0) node.content = undefined;
 		}
 	};
+
+	canBeVar = (text: string) => (
+		text.match(/^\p{L}+$/u)
+	);
 }
 
 export default InlineParser;
