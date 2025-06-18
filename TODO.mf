@@ -4,7 +4,7 @@
 {v} Basic math
 {v} Separators (hr)
 {v} Var
-{_} Superscripts & subscripts
+{v} Subscripts & superscripts
 {_} Notes
 {_} Typography
 {_} Front matter

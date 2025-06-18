@@ -1,0 +1,13 @@
+The area is 19000 km^2^ and contains mostly H_2_O.
+
+Some _text that_ shouldn't be subscripted.
+
+This _word_ shouldn't be subscripted too.
+
+This sli^ce of text^ shouldn't be superscripted.
+
+But this sli^[ce of text]^ should.
+
+Simple reference to $x$ variable is `var`.
+
+Reference to $x_i$ variable: for now it's MathML.

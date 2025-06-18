@@ -9,15 +9,17 @@ import type {
 const specialChars = /[#*[\]{}"'`:~^!|/_=$-]/;
 
 const commonTokens: Array<{chars: string, type: InlineTokenType}> = [
-	{chars: '#', type: 'B'},
-	{chars: '/', type: 'I'},
+	{chars: '\'\'', type: 'CITE'},
 	{chars: '__', type: 'U'},
 	{chars: '--', type: 'S'},
-	{chars: '\'\'', type: 'CITE'},
+	{chars: '#', type: 'B'},
+	{chars: '/', type: 'I'},
 	{chars: '~', type: 'EM'},
 	{chars: '*', type: 'STRONG'},
 	{chars: '=', type: 'MARK'},
 	{chars: ':', type: 'DFN'},
+	{chars: '^', type: 'SUP'},
+	{chars: '_', type: 'SUB'},
 	{chars: '$', type: 'VAR'},
 	{chars: '`', type: 'CODE'},
 ];
@@ -107,7 +109,8 @@ class InlineParser {
 					const nextIsAlphanumeric = /^(\p{L}|\p{M}|\p{N})/u.test(content[index + nextSpecialCharIndex + consumedChars] ?? '');
 					const prevIsWhitespace = /^(\p{Z})/u.test(content[index + nextSpecialCharIndex - 1] ?? '');
 					const nextIsWhitespace = /^(\p{Z})/u.test(content[index + nextSpecialCharIndex + consumedChars] ?? '');
-					if ((prevIsAlphanumeric && nextIsAlphanumeric)
+					if (
+						(prevIsAlphanumeric && nextIsAlphanumeric && !['SUP', 'SUB'].includes(type))
 						|| ((prevIsWhitespace && nextIsWhitespace) && !['TD', 'TH'].includes(type))
 						|| ((prevIsAlphanumeric || nextIsAlphanumeric) && ['TD', 'TH'].includes(type))
 					) {
@@ -122,6 +125,14 @@ class InlineParser {
 						}
 						if (!nextIsAlphanumeric && !prevIsWhitespace) {
 							position.push('end');
+						}
+						if (['SUB', 'SUP'].includes(type)) {
+							if (!prevIsWhitespace) {
+								position.push('start');
+							}
+							if (!nextIsWhitespace) {
+								position.push('end');
+							}
 						}
 						const newToken: InlineToken = {
 							type,
@@ -255,8 +266,8 @@ class InlineParser {
 						token.type as InlineNodeType,
 						{tokens: tokens.slice(index + 1, closeTokenIndex), attributes},
 					);
+					const contentText = tokens.slice(index + 1, closeTokenIndex).map((t) => t.text).join('');
 					if (token.type === 'VAR') {
-						const contentText = tokens.slice(index + 1, closeTokenIndex).map((t) => t.text).join('');
 						if (!this.canBeVar(contentText)) {
 							newNode = new InlineNode(
 								'INLINE_MATH',
@@ -267,7 +278,23 @@ class InlineParser {
 							);
 						}
 					}
-					node.children.push(newNode);
+					if (['SUP', 'SUB'].includes(token.type)
+						&& (((tokens[index - 1]?.type !== 'TEXT' || tokens[index - 1]?.text!.endsWith(' '))
+							&& (tokens[closeTokenIndex + 1]?.type !== 'TEXT' || tokens[closeTokenIndex + 1]?.text!.startsWith(' ')))
+							|| contentText.includes(' ')) // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
+					) {
+						if (tokens[index + 1]!.type === 'BRACKET_OPEN' && tokens[closeTokenIndex - 1]!.type === 'BRACKET_CLOSE') {
+							newNode = new InlineNode(token.type as InlineNodeType, {
+								tokens: tokens.slice(index + 2, closeTokenIndex - 1),
+								attributes,
+							});
+							node.children.push(newNode);
+						} else {
+							this.addTextNode(node.children, token.text + contentText + tokens[closeTokenIndex]!.text);
+						}
+					} else {
+						node.children.push(newNode);
+					}
 					index = closeTokenIndex + 1;
 				} else {
 					this.addTextNode(node.children, token.text!);
