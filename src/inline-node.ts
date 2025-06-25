@@ -2,6 +2,8 @@ import {type InlineToken, type InlineNodeType, type Node} from './types';
 
 class InlineNode {
 	type: InlineNodeType;
+	subtype?: string;
+	id?: string;
 	attributes?: Record<string, string | string[]>;
 	content?: string;
 	children: Node[];
@@ -14,6 +16,8 @@ class InlineNode {
 			content?: string,
 			children?: Node[],
 			tokens?: InlineToken[],
+			subtype?: string,
+			id?: string,
 		},
 	) {
 		this.type = type;
@@ -21,6 +25,8 @@ class InlineNode {
 		this.content = spec?.content;
 		this.children = spec?.children ?? [];
 		this.tokens = spec?.tokens;
+		this.subtype = spec?.subtype;
+		this.id = spec?.id;
 	}
 }
 

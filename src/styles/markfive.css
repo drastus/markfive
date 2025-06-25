@@ -1,0 +1,38 @@
+body {
+	font-family: 'Noto Sans', sans-serif;
+}
+
+@media print {
+	body {
+		font-family: 'Noto Serif', serif;
+	}
+}
+
+.mf-note,
+.mf-tooltip {
+	font-size: 0.85rem;
+}
+
+.mf-tooltip {
+	position: absolute;
+	background-color: rgb(from currentColor calc(255 - r) calc(255 - g) calc(255 - b) / alpha);
+	border: 1px solid #ccc;
+	padding: 8px;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+	max-width: 300px;
+	border-radius: 4px;
+	opacity: 0;
+	transition: opacity 0.3s ease-in-out;
+}
+
+.mf-tooltip.mf-tooltip-visible {
+	opacity: 1;
+}
+
+.mf-note-ref-hoverable {
+  text-decoration: underline dotted;
+}
+
+.mf-tooltip .mf-note-backref {
+	display: none;
+}

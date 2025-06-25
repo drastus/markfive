@@ -165,9 +165,10 @@ class InlineParser {
 					}
 					const newToken: InlineToken = {type: 'BRACKET_CLOSE'};
 					const contentRest = content.slice(index + nextSpecialCharIndex + 1);
-					match = contentRest.match(/^\(([^()]*(\([^()]+\))?[^()]*)\)/);
-					if (match?.[1]) {
-						newToken.defaultAttribute = match[1];
+					match = contentRest.match(`^(\\(([^()]*(\\([^()]+\\))?[^()]*)\\))?(${attributesRegexString})?`);
+					if (match?.[2] || match?.[4]) {
+						newToken.defaultAttribute = match[2];
+						newToken.attributes = match[4];
 						newToken.text = ']' + match[0];
 						consumedChars = 1 + match[0].length;
 					} else {
@@ -200,6 +201,7 @@ class InlineParser {
 	parseTokenizedNode = (node: Node) => {
 		const tokens = node.tokens!;
 		let index = 0;
+		let expectedNoteSubtype: string | undefined;
 
 		while (index < tokens.length) {
 			const token = tokens[index]!;
@@ -211,12 +213,35 @@ class InlineParser {
 			}
 			if (token.type === 'BRACKET_OPEN') {
 				const closeTokenIndex = findIndexInRange<InlineToken>(
-					tokens, (t) => t.type === 'BRACKET_CLOSE' && t.defaultAttribute, index + 1,
+					tokens, (t) => t.type === 'BRACKET_CLOSE', index + 1,
 				);
-				if (closeTokenIndex !== undefined) {
+				if (closeTokenIndex !== undefined
+					&& tokens.slice(index + 1, closeTokenIndex).every((t) => t.text === '*')
+					&& !expectedNoteSubtype
+					&& !tokens[closeTokenIndex]!.defaultAttribute
+				) {
+					expectedNoteSubtype = '*'.repeat(tokens.slice(index + 1, closeTokenIndex).length);
+					index = closeTokenIndex + 1;
+				} else if (closeTokenIndex !== undefined
+					&& (expectedNoteSubtype
+						|| (tokens.slice(index + 1, closeTokenIndex).every((t) => t.text === '*')
+							&& tokens[closeTokenIndex]!.defaultAttribute
+						)
+					)
+				) {
+					const newNode = new InlineNode('NOTE', {
+						subtype: expectedNoteSubtype ?? tokens.slice(index + 1, closeTokenIndex).map((t) => t.text).join(''),
+						id: parseAttributes(tokens[closeTokenIndex]!.defaultAttribute)?.id as string | undefined,
+						tokens: tokens.slice(index + 1, closeTokenIndex),
+						attributes: parseAttributes(tokens[closeTokenIndex]!.attributes),
+					});
+					node.children.push(newNode);
+					expectedNoteSubtype = undefined;
+					index = closeTokenIndex + 1;
+				} else if (closeTokenIndex !== undefined && tokens[closeTokenIndex]!.defaultAttribute) {
 					const newNode = new InlineNode('A', {
 						tokens: tokens.slice(index + 1, closeTokenIndex),
-						attributes: {href: tokens[closeTokenIndex]!.defaultAttribute!},
+						attributes: {href: tokens[closeTokenIndex]!.defaultAttribute!}, // add other link attributes
 					});
 					node.children.push(newNode);
 					index = closeTokenIndex + 1;
@@ -281,7 +306,7 @@ class InlineParser {
 					if (['SUP', 'SUB'].includes(token.type)
 						&& (((tokens[index - 1]?.type !== 'TEXT' || tokens[index - 1]?.text!.endsWith(' '))
 							&& (tokens[closeTokenIndex + 1]?.type !== 'TEXT' || tokens[closeTokenIndex + 1]?.text!.startsWith(' ')))
-							|| contentText.includes(' ')) // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
+							|| contentText.includes(' '))
 					) {
 						if (tokens[index + 1]!.type === 'BRACKET_OPEN' && tokens[closeTokenIndex - 1]!.type === 'BRACKET_CLOSE') {
 							newNode = new InlineNode(token.type as InlineNodeType, {

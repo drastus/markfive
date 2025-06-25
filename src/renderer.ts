@@ -1,5 +1,6 @@
 import BlockNode from './block-node';
 import {stringifyAttributes, trimAndJoin} from './helpers';
+import type InlineNode from './inline-node';
 import type {Node, Options} from './types';
 
 const elementMappings: Record<string, string> = {
@@ -16,12 +17,33 @@ const tableCellElementMappings: Record<string, string> = {
 };
 const mainBlockElements = ['body', 'table', 'tr', 'ol', 'ul'];
 
+const notesListTypes = [
+	'decimal',
+	'lower-alpha',
+	'upper-alpha',
+];
+
+const countToCue = (count: number, noteType: string) => {
+	if ((noteType.length - 1) % 3 === 0) return count;
+	const base = 26;
+	let result = '';
+	let num = count;
+	while (num > 0) {
+		num--;
+		result = String.fromCharCode((noteType.length % 3 === 0 ? 65 : 97) + (num % base)) + result;
+		num = Math.floor(num / base);
+	}
+	return result;
+};
+
 class Renderer {
 	ast: Node;
 	newlineMode: 'br' | 'n';
 	newlineRequired: boolean;
 	options: Options;
 	isMathUsed: boolean;
+	notes: Record<string, Node[]> = {};
+	noteRefs: Record<string, Array<{id: string, refId: string}>> = {};
 
 	constructor(ast: Node, options: Options) {
 		this.ast = ast;
@@ -31,16 +53,23 @@ class Renderer {
 		this.isMathUsed = false;
 	}
 
-	getTopScripts = () => {
+	getTopIncludes = () => {
+		let topScripts = '<link rel="stylesheet" href="../lib/markfive.css">';
 		if (this.isMathUsed) {
 			const cdnUrl = 'https://unpkg.com/';
 			const temmlPkg = 'temml@0.10';
-			return trimAndJoin([
-				'',
-				`<LINK rel="stylesheet" href="${cdnUrl}${temmlPkg}/dist/Temml-Local.css">`,
+			topScripts = trimAndJoin([
+				topScripts,
+				`<link rel="stylesheet" href="${cdnUrl}${temmlPkg}/dist/Temml-Local.css">`,
 			]);
 		}
-		return '';
+		if (Object.keys(this.notes).length > 0) {
+			topScripts = trimAndJoin([
+				topScripts,
+				'<script src="../lib/notes.js"></script>', // make it absolute
+			]);
+		}
+		return topScripts;
 	};
 
 	preview = (body: string) => {
@@ -50,7 +79,7 @@ class Renderer {
 			'<html>',
 			'<head>',
 			'<title>Markfive</title>',
-			`<meta charset="UTF-8">${this.getTopScripts()}`,
+			`<meta charset="UTF-8">${this.getTopIncludes()}`,
 			'<meta name="viewport" content="width=device-width, initial-scale=1.0">',
 			'</head>',
 			'<body>',
@@ -75,6 +104,7 @@ class Renderer {
 			node.children.forEach((child: Node) => {
 				string += this.renderNode(child);
 			});
+			if (Object.keys(this.notes).length > 0) string += this.renderNotes();
 			return string;
 		}
 		if (node.type === 'HEADING') elementType = `h${node.subtype}`;
@@ -107,8 +137,28 @@ class Renderer {
 			this.isMathUsed = true;
 			return node.children[0]?.content ?? '';
 		}
-		elementType ||= elementMappings[node.type] ?? node.type.toLowerCase();
+		if (node.type === 'NOTE') {
+			const refCount = (this.noteRefs[node.subtype!]?.length ?? 0) + 1;
+			const count = node.id
+				? ((this.notes[node.subtype!]?.findIndex((note) => note.attributes?.id === node.id) ?? 0) + 1)
+				: (this.notes[node.subtype!]?.length ?? 0) + 1;
+			const noteRef = {
+				refId: `mf-note-ref-${node.subtype!.length}-${refCount}`,
+				id: node.id
+					?? node.attributes?.id as string | undefined
+					?? `mf-note-${node.subtype!.length}-${refCount}`,
+			};
+			if (!node.id) {
+				this.notes[node.subtype!] ||= [];
+				this.notes[node.subtype!]!.push({...node, id: noteRef.id});
+			}
+			this.noteRefs[node.subtype!] ||= [];
+			this.noteRefs[node.subtype!]!.push(noteRef);
+			const cue = `<sup>${countToCue(count, node.subtype!)}</sup>`;
+			return `<a href="#${noteRef.id}" id="${noteRef.refId}" class="mf-note-ref">${cue}</a>`;
+		}
 
+		elementType ??= elementMappings[node.type] ?? node.type.toLowerCase();
 		if (this.options.debug) console.log('renderNode', node.type, elementType, node.attributes ?? '');
 
 		this.newlineMode = 'br';
@@ -125,6 +175,31 @@ class Renderer {
 		} else {
 			return `<${elementType}${stringifyAttributes(node.attributes)}/>\n`;
 		}
+	};
+
+	renderNotes = () => {
+		let string = '';
+		const noteTypes = Object.keys(this.notes);
+		noteTypes.sort((a, b) => a.length - b.length);
+		noteTypes.forEach((noteType) => {
+			string += '<hr class="mf-notes-separator"/>\n';
+			string += `<ol class="mf-notes" style="list-style-type: ${notesListTypes[(noteType.length - 1) % 3]}">\n`;
+			const notes = this.notes[noteType]!;
+			notes.forEach((note) => {
+				const {id} = note as InlineNode;
+				string += `<li class="mf-note" id="${id}">`;
+				this.noteRefs[noteType]!.filter((ref) => ref.id === id).forEach((ref) => {
+					string += `<a href="#${ref.refId}" class="mf-note-backref">↑</a>`;
+				});
+				string += ' ';
+				note.children.forEach((child: Node) => {
+					string += this.renderNode(child);
+				});
+				string += '</li>\n';
+			});
+			string += '</ol>\n';
+		});
+		return string;
 	};
 }
 

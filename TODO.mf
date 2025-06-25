@@ -1,23 +1,28 @@
-{v} Basic elements
-{v} Basic lists
-{v} Basic tables
-{v} Basic math
-{v} Separators (hr)
-{v} Var
-{v} Subscripts & superscripts
-{_} Notes
-{_} Typography
-{_} Front matter
-{_} Templates
-{_} Abbreviations
-{_} Images
-{_} Definition lists
-{_} Quotes and blockquotes
-{_} Entities
-{_} Escaping
-{_} Small
-{_} Edits
-{_} Comments
-{_} Other HTML elements
-{_} Metadata variables
-{_} Indices
+|v| Basic elements
+|v| Basic lists
+|v| Basic tables
+|v| Basic math
+|v| Separators (hr)
+|v| Var
+|v| Subscripts & superscripts
+|v| Notes
+|_| Escaping HTML
+|_| Typography
+|_| Front matter
+|_| Templates
+|_| Images
+|_| Description lists
+|_| Blockquotes
+|_| Abbreviations
+|_| Escaping
+|_| Bibliography
+|_| Small
+|_| Edits
+|_| Comments
+|_| Other HTML elements
+|_| Colspans and rowspans
+|_| Numeric table headers
+|_| Metadata variables
+|_| Additional entities
+|_| Indices
+|_| Multi-line notes
