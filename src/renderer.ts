@@ -53,6 +53,10 @@ class Renderer {
 		this.isMathUsed = false;
 	}
 
+	escapeHtml = (str: string) => str
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;');
+
 	getTopIncludes = () => {
 		let topScripts = '<link rel="stylesheet" href="../lib/markfive.css">';
 		if (this.isMathUsed) {
@@ -110,7 +114,7 @@ class Renderer {
 		if (node.type === 'HEADING') elementType = `h${node.subtype}`;
 		if (node.type === 'TABLE_CELL') elementType = tableCellElementMappings[node.subtype!]!;
 		if (node.type === 'TEXT') {
-			return node.content!;
+			return this.escapeHtml(node.content!);
 		}
 		if (node.type === 'LINE') {
 			let string = '';

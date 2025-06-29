@@ -7,7 +7,7 @@
 |v| Subscripts & superscripts
 |v| Notes
 |v| Typography
-|_| Escaping HTML
+|v| Escaping HTML
 |_| Front matter
 |_| Internationalized typography
 |_| Templates
