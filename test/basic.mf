@@ -13,7 +13,7 @@ The third sentence# is in the new line.
 * * *
 
 The next line contains math:
-$$ E = \frac{mc^2}{\sqrt{1-\frac{v^2}{c^2}}} $$
+$$ E = \frac{mc^2}{\sqrt{1-\frac{v^2}{c^2}}}
 
 Here, $E$ is energy. Similar equation is $E=mc^2$.
 

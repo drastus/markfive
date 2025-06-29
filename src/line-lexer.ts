@@ -68,7 +68,7 @@ class LineLexer {
 			return;
 		}
 
-		if (match = line.match(`^([ \t]*)(-|\\d+\\.)${attributesRegexString}(?: (.+))?`)) {
+		if (match = line.match(`^([ \t]*)(-|\\d+\\.)${attributesRegexString}(?: (.+))?$`)) {
 			this.tokens.push({
 				type: 'LINE_WITH_LIST_ITEM_MARK',
 				line,
@@ -135,7 +135,7 @@ class LineLexer {
 			return;
 		}
 
-		if (match = line.match('^([ \t]*)(\\$\\$)(.+)(\\$\\$)')) {
+		if (match = line.match('^([ \t]*)(\\$\\$)(.+?)(\\$\\$)?$')) {
 			this.tokens.push({
 				type: 'LINE_WITH_MATH_MARK',
 				line,

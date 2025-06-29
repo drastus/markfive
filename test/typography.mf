@@ -1,0 +1,14 @@
+Here... is a basic text that contains a quote: "Hello, world!". Here is some code that contains quotes: `print "Hello, world!"`. Wikipedia says: "French uses angle quotation marks (guillemets, or /duck-foot quotes/), adding a 'quarter-em space' within the quotes."
+
+Here is a block code that contains quotes:
+``
+	print "Hello, world!"
+
+''No Life 'Til Leather'' was recorded on July 6, 1982.
+
+Glitter, felt, yarn, and buttons---his kitchen looked as if a clown had exploded.
+A flock of sparrows---some of them juveniles---alighted and sang.
+
+For ages 3--5.
+
+-15

@@ -73,7 +73,7 @@ class Renderer {
 	};
 
 	preview = (body: string) => {
-		if (this.options.debug) console.log('Renderer preview\n');
+		if (this.options.debug) console.log('\nRenderer preview\n');
 		const result = trimAndJoin([
 			'<!DOCTYPE html>',
 			'<html>',
@@ -92,7 +92,7 @@ class Renderer {
 	};
 
 	render = () => {
-		if (this.options.debug) console.log('Renderer render\n');
+		if (this.options.debug) console.log('\nRenderer render\n');
 		return this.renderNode(this.ast);
 	};
 
@@ -135,7 +135,7 @@ class Renderer {
 		}
 		if (node.type === 'INLINE_MATH') {
 			this.isMathUsed = true;
-			return node.children[0]?.content ?? '';
+			return node.content ?? '';
 		}
 		if (node.type === 'NOTE') {
 			const refCount = (this.noteRefs[node.subtype!]?.length ?? 0) + 1;

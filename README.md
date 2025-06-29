@@ -5,6 +5,10 @@ Building:
 
 	npm run build
 
+Develop mode (faster builds, watching for changes):
+
+	npm run dev
+
 Running test:
 
 	markfive test/test.mf

@@ -3,26 +3,32 @@
 |v| Basic tables
 |v| Basic math
 |v| Separators (hr)
-|v| Var
+|v| Var and inline math
 |v| Subscripts & superscripts
 |v| Notes
+|v| Typography
 |_| Escaping HTML
-|_| Typography
 |_| Front matter
+|_| Internationalized typography
 |_| Templates
 |_| Images
-|_| Description lists
 |_| Blockquotes
+|_| Kbd and samp
+|_| Div and span
+|_| Description lists
 |_| Abbreviations
 |_| Escaping
-|_| Bibliography
+|_| Other HTML elements
+|_| Comments
 |_| Small
 |_| Edits
-|_| Comments
-|_| Other HTML elements
 |_| Colspans and rowspans
 |_| Numeric table headers
+|_| Figures
 |_| Metadata variables
 |_| Additional entities
+|_| Chemical notation
+|_| Musical notation
+|_| Bibliography
 |_| Indices
 |_| Multi-line notes

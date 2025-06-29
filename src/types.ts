@@ -6,6 +6,8 @@ export type Options = {
 	'line-ast': boolean,
 	ast: boolean,
 	debug: boolean,
+	'debug-tokens': boolean,
+	'no-typography': boolean,
 	preview: boolean,
 };
 
@@ -63,6 +65,8 @@ export type InlineTokenType =
 	| 'SUP'
 	| 'SUB'
 	| 'CODE'
+	| 'KBD'
+	| 'SAMP'
 	| 'CITE'
 	| 'B'
 	| 'I'
@@ -82,6 +86,8 @@ export type InlineNodeType =
 	| 'SUP'
 	| 'SUB'
 	| 'CODE'
+	| 'KBD'
+	| 'SAMP'
 	| 'CITE'
 	| 'B'
 	| 'I'

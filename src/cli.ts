@@ -13,6 +13,8 @@ const options: Options = {
 	'line-ast': false,
 	ast: false,
 	debug: false,
+	'debug-tokens': false,
+	'no-typography': false,
 	preview: false,
 };
 
@@ -21,6 +23,9 @@ args.forEach((arg) => {
 		options[arg.slice(2) as keyof Options] = true;
 	}
 });
+if (options['debug-tokens']) {
+	options.debug = true;
+}
 
 try {
 	input += fs.readFileSync(args[args.length - 1]!, 'utf8');

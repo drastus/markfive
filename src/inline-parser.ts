@@ -6,7 +6,7 @@ import type {
 	BlockNodeType, InlineNodeType, InlineToken, InlineTokenType, Node, Options,
 } from './types';
 
-const specialChars = /[#*[\]{}"'`:~^!|/_=$-]/;
+const specialChars = /[#*[\]{}"'`:~^!|/_=$<>-]/;
 
 const commonTokens: Array<{chars: string, type: InlineTokenType}> = [
 	{chars: '\'\'', type: 'CITE'},
@@ -22,6 +22,8 @@ const commonTokens: Array<{chars: string, type: InlineTokenType}> = [
 	{chars: '_', type: 'SUB'},
 	{chars: '$', type: 'VAR'},
 	{chars: '`', type: 'CODE'},
+	{chars: '>', type: 'KBD'},
+	{chars: '<', type: 'SAMP'},
 ];
 const tableRowTokens: Array<{chars: string, type: InlineTokenType}> = [
 	{chars: '|', type: 'TD'},
@@ -203,137 +205,139 @@ class InlineParser {
 		let index = 0;
 		let expectedNoteSubtype: string | undefined;
 
-		while (index < tokens.length) {
-			const token = tokens[index]!;
-			let attributes: Record<string, string | string[]> | undefined;
+		if (node.type !== 'INLINE_MATH') {
+			while (index < tokens.length) {
+				const token = tokens[index]!;
+				let attributes: Record<string, string | string[]> | undefined;
 
-			if (token.type === 'MATH') {
-				index++;
-				continue;
-			}
-			if (token.type === 'BRACKET_OPEN') {
-				const closeTokenIndex = findIndexInRange<InlineToken>(
-					tokens, (t) => t.type === 'BRACKET_CLOSE', index + 1,
-				);
-				if (closeTokenIndex !== undefined
-					&& tokens.slice(index + 1, closeTokenIndex).every((t) => t.text === '*')
-					&& !expectedNoteSubtype
-					&& !tokens[closeTokenIndex]!.defaultAttribute
-				) {
-					expectedNoteSubtype = '*'.repeat(tokens.slice(index + 1, closeTokenIndex).length);
-					index = closeTokenIndex + 1;
-				} else if (closeTokenIndex !== undefined
-					&& (expectedNoteSubtype
-						|| (tokens.slice(index + 1, closeTokenIndex).every((t) => t.text === '*')
-							&& tokens[closeTokenIndex]!.defaultAttribute
-						)
-					)
-				) {
-					const newNode = new InlineNode('NOTE', {
-						subtype: expectedNoteSubtype ?? tokens.slice(index + 1, closeTokenIndex).map((t) => t.text).join(''),
-						id: parseAttributes(tokens[closeTokenIndex]!.defaultAttribute)?.id as string | undefined,
-						tokens: tokens.slice(index + 1, closeTokenIndex),
-						attributes: parseAttributes(tokens[closeTokenIndex]!.attributes),
-					});
-					node.children.push(newNode);
-					expectedNoteSubtype = undefined;
-					index = closeTokenIndex + 1;
-				} else if (closeTokenIndex !== undefined && tokens[closeTokenIndex]!.defaultAttribute) {
-					const newNode = new InlineNode('A', {
-						tokens: tokens.slice(index + 1, closeTokenIndex),
-						attributes: {href: tokens[closeTokenIndex]!.defaultAttribute!}, // add other link attributes
-					});
-					node.children.push(newNode);
-					index = closeTokenIndex + 1;
-				} else {
-					this.addTextNode(node.children, token.text!);
+				if (token.type === 'MATH') {
 					index++;
+					continue;
 				}
-			} else if (['TD', 'TH'].includes(token.type)) {
-				const nextCellTokenIndex = findIndexInRange<InlineToken>(
-					tokens, (t) => ['TD', 'TH'].includes(t.type), index + 1,
-				) ?? tokens.length;
-				const newNode = new InlineNode(token.type as InlineNodeType, {
-					tokens: tokens.slice(index + 1, nextCellTokenIndex),
-				});
-				node.children.push(newNode);
-				index = nextCellTokenIndex;
-			} else if (token.position?.includes('start')) {
-				let closeTokenIndex: number | undefined;
-				if (selfNestableTokenTypes.includes(token.type)) {
-					let startIndex = index + 1;
-					let newTokenIndex: number | undefined;
-					let depth = 1;
-					do {
-						newTokenIndex = findIndexInRange<InlineToken>(
-							tokens, (t) => t.type === token.type, startIndex,
-						);
-						if (newTokenIndex !== undefined) {
-							if (tokens[newTokenIndex]!.position?.includes('end') && newTokenIndex > startIndex) {
-								closeTokenIndex = newTokenIndex;
-								if (tokens[newTokenIndex]!.attributes) {
-									attributes = parseAttributes(tokens[newTokenIndex]!.attributes);
-								}
-								depth -= 1;
-							} else {
-								depth += 1;
-							}
-							startIndex = newTokenIndex + 1;
-						}
-					} while (depth > 0 && newTokenIndex !== undefined);
-				} else {
-					closeTokenIndex = findIndexInRange<InlineToken>(
-						tokens, (t) => t.type === token.type && t.position?.includes('end'), index + 1,
+				if (token.type === 'BRACKET_OPEN') {
+					const closeTokenIndex = findIndexInRange<InlineToken>(
+						tokens, (t) => t.type === 'BRACKET_CLOSE', index + 1,
 					);
-				}
-				if (closeTokenIndex !== undefined) {
-					let newNode = new InlineNode(
-						token.type as InlineNodeType,
-						{tokens: tokens.slice(index + 1, closeTokenIndex), attributes},
-					);
-					const contentText = tokens.slice(index + 1, closeTokenIndex).map((t) => t.text).join('');
-					if (token.type === 'VAR') {
-						if (!this.canBeVar(contentText)) {
-							newNode = new InlineNode(
-								'INLINE_MATH',
-								{
-									content: markfiveMathToMathML(contentText, false, this.options.debug),
-									attributes,
-								},
-							);
-						}
-					}
-					if (['SUP', 'SUB'].includes(token.type)
-						&& (((tokens[index - 1]?.type !== 'TEXT' || tokens[index - 1]?.text!.endsWith(' '))
-							&& (tokens[closeTokenIndex + 1]?.type !== 'TEXT' || tokens[closeTokenIndex + 1]?.text!.startsWith(' ')))
-							|| contentText.includes(' '))
+					if (closeTokenIndex !== undefined
+						&& tokens.slice(index + 1, closeTokenIndex).every((t) => t.text === '*')
+						&& !expectedNoteSubtype
+						&& !tokens[closeTokenIndex]!.defaultAttribute
 					) {
-						if (tokens[index + 1]!.type === 'BRACKET_OPEN' && tokens[closeTokenIndex - 1]!.type === 'BRACKET_CLOSE') {
-							newNode = new InlineNode(token.type as InlineNodeType, {
-								tokens: tokens.slice(index + 2, closeTokenIndex - 1),
-								attributes,
-							});
-							node.children.push(newNode);
-						} else {
-							this.addTextNode(node.children, token.text + contentText + tokens[closeTokenIndex]!.text);
-						}
-					} else {
+						expectedNoteSubtype = '*'.repeat(tokens.slice(index + 1, closeTokenIndex).length);
+						index = closeTokenIndex + 1;
+					} else if (closeTokenIndex !== undefined
+						&& (expectedNoteSubtype
+							|| (tokens.slice(index + 1, closeTokenIndex).every((t) => t.text === '*')
+								&& tokens[closeTokenIndex]!.defaultAttribute
+							)
+						)
+					) {
+						const newNode = new InlineNode('NOTE', {
+							subtype: expectedNoteSubtype ?? tokens.slice(index + 1, closeTokenIndex).map((t) => t.text).join(''),
+							id: parseAttributes(tokens[closeTokenIndex]!.defaultAttribute)?.id as string | undefined,
+							tokens: tokens.slice(index + 1, closeTokenIndex),
+							attributes: parseAttributes(tokens[closeTokenIndex]!.attributes),
+						});
 						node.children.push(newNode);
+						expectedNoteSubtype = undefined;
+						index = closeTokenIndex + 1;
+					} else if (closeTokenIndex !== undefined && tokens[closeTokenIndex]!.defaultAttribute) {
+						const newNode = new InlineNode('A', {
+							tokens: tokens.slice(index + 1, closeTokenIndex),
+							attributes: {href: tokens[closeTokenIndex]!.defaultAttribute!}, // add other link attributes
+						});
+						node.children.push(newNode);
+						index = closeTokenIndex + 1;
+					} else {
+						this.addTextNode(node.children, token.text!);
+						index++;
 					}
-					index = closeTokenIndex + 1;
+				} else if (['TD', 'TH'].includes(token.type)) {
+					const nextCellTokenIndex = findIndexInRange<InlineToken>(
+						tokens, (t) => ['TD', 'TH'].includes(t.type), index + 1,
+					) ?? tokens.length;
+					const newNode = new InlineNode(token.type as InlineNodeType, {
+						tokens: tokens.slice(index + 1, nextCellTokenIndex),
+					});
+					node.children.push(newNode);
+					index = nextCellTokenIndex;
+				} else if (token.position?.includes('start')) {
+					let closeTokenIndex: number | undefined;
+					if (selfNestableTokenTypes.includes(token.type)) {
+						let startIndex = index + 1;
+						let newTokenIndex: number | undefined;
+						let depth = 1;
+						do {
+							newTokenIndex = findIndexInRange<InlineToken>(
+								tokens, (t) => t.type === token.type, startIndex,
+							);
+							if (newTokenIndex !== undefined) {
+								if (tokens[newTokenIndex]!.position?.includes('end') && newTokenIndex > startIndex) {
+									closeTokenIndex = newTokenIndex;
+									if (tokens[newTokenIndex]!.attributes) {
+										attributes = parseAttributes(tokens[newTokenIndex]!.attributes);
+									}
+									depth -= 1;
+								} else {
+									depth += 1;
+								}
+								startIndex = newTokenIndex + 1;
+							}
+						} while (depth > 0 && newTokenIndex !== undefined);
+					} else {
+						closeTokenIndex = findIndexInRange<InlineToken>(
+							tokens, (t) => t.type === token.type && t.position?.includes('end'), index + 1,
+						);
+					}
+					if (closeTokenIndex !== undefined) {
+						let newNode = new InlineNode(
+							token.type as InlineNodeType,
+							{tokens: tokens.slice(index + 1, closeTokenIndex), attributes},
+						);
+						const contentText = tokens.slice(index + 1, closeTokenIndex).map((t) => t.text).join('');
+						if (token.type === 'VAR') {
+							if (!this.canBeVar(contentText)) {
+								newNode = new InlineNode(
+									'INLINE_MATH',
+									{
+										content: markfiveMathToMathML(contentText, false, this.options.debug),
+										attributes,
+									},
+								);
+							}
+						}
+						if (['SUP', 'SUB'].includes(token.type)
+							&& (((tokens[index - 1]?.type !== 'TEXT' || tokens[index - 1]?.text!.endsWith(' '))
+								&& (tokens[closeTokenIndex + 1]?.type !== 'TEXT' || tokens[closeTokenIndex + 1]?.text!.startsWith(' ')))
+								|| contentText.includes(' '))
+						) {
+							if (tokens[index + 1]!.type === 'BRACKET_OPEN' && tokens[closeTokenIndex - 1]!.type === 'BRACKET_CLOSE') {
+								newNode = new InlineNode(token.type as InlineNodeType, {
+									tokens: tokens.slice(index + 2, closeTokenIndex - 1),
+									attributes,
+								});
+								node.children.push(newNode);
+							} else {
+								this.addTextNode(node.children, token.text + contentText + tokens[closeTokenIndex]!.text);
+							}
+						} else {
+							node.children.push(newNode);
+						}
+						index = closeTokenIndex + 1;
+					} else {
+						this.addTextNode(node.children, token.text!);
+						index++;
+					}
 				} else {
 					this.addTextNode(node.children, token.text!);
 					index++;
 				}
-			} else {
-				this.addTextNode(node.children, token.text!);
-				index++;
 			}
 		}
 		if (node.type === 'TEXT' && node.children.length === 1 && node.children[0]!.type === 'TEXT') {
 			node.children = [];
 		}
-		if (!this.options.debug) {
+		if (!this.options['debug-tokens']) {
 			node.tokens = undefined;
 			if (node.children.length > 0) node.content = undefined;
 		}
