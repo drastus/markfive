@@ -8,7 +8,8 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "test": "tsx test/check-parser-changes.ts"
   },
   "bin": {
     "markfive": "./lib/cli.cjs"
@@ -24,8 +25,8 @@
     "eslint-config-xo-typescript": "^4.0.0",
     "rollup": "^4.13.0",
     "rollup-plugin-copy": "^3.5.0",
-    "ts-node": "^10.9.1",
     "tslib": "^2.6.2",
+    "tsx": "^4.20.3",
     "typescript": "~5.4.3"
   },
   "dependencies": {

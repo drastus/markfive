@@ -90,7 +90,7 @@ class Typography {
 			} else if (char === '-' && text[index + 1] === '-') {
 				modifiedText += '–'; // en dash
 				index += 1;
-			} else if ((prevIsWhitespace || this.prevChar === '') && char === '-' && text[index + 1]?.match(/[0-9]/)) {
+			} else if ((prevIsWhitespace || this.prevChar === '') && char === '-' && text[index + 1]?.match(/\d/)) {
 				modifiedText += '−'; // minus
 			} else if (char === '<' && text[index + 1] === '<') {
 				modifiedText += '«';

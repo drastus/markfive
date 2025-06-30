@@ -8,13 +8,12 @@
 |v| Notes
 |v| Typography
 |v| Escaping HTML
-|_| Front matter
-|_| Internationalized typography
 |_| Templates
 |_| Images
 |_| Blockquotes
 |_| Kbd and samp
 |_| Div and span
+|_| Internationalized typography
 |_| Description lists
 |_| Abbreviations
 |_| Escaping
@@ -22,6 +21,7 @@
 |_| Comments
 |_| Small
 |_| Edits
+|_| Config
 |_| Colspans and rowspans
 |_| Numeric table headers
 |_| Figures
