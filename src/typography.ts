@@ -33,8 +33,6 @@ class Typography {
 		}
 		if (node.type === 'TEXT') {
 			this.processText(node);
-			if (this.options.debug) console.log(`double ${this.openDoubleQuotes.map((n) => n.node.content!).join('')}`);
-			if (this.options.debug) console.log(`single ${this.openSingleQuotes.map((n) => n.node.content!).join('')}`);
 		}
 		if ('children' in node && Array.isArray(node.children)) {
 			for (const child of node.children) {

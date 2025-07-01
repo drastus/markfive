@@ -6,7 +6,7 @@ import type {
 	BlockNodeType, InlineNodeType, InlineToken, InlineTokenType, Node, Options,
 } from './types';
 
-const specialChars = /[#*[\]{}"'`:~^!|/_=$<>-]/;
+const specialChars = /[#*[\]{}"'`:~^!|/_=$<>&-]/;
 
 const commonTokens: Array<{chars: string, type: InlineTokenType}> = [
 	{chars: '\'\'', type: 'CITE'},
@@ -24,6 +24,7 @@ const commonTokens: Array<{chars: string, type: InlineTokenType}> = [
 	{chars: '`', type: 'CODE'},
 	{chars: '>', type: 'KBD'},
 	{chars: '<', type: 'SAMP'},
+	{chars: '&', type: 'IMAGE'},
 ];
 const tableRowTokens: Array<{chars: string, type: InlineTokenType}> = [
 	{chars: '|', type: 'TD'},
@@ -100,7 +101,10 @@ class InlineParser {
 			for (const {chars, type} of availableTokens) {
 				if (content[index + nextSpecialCharIndex] === chars[0]) {
 					if (chars.length === 2 && content[index + nextSpecialCharIndex + 1] !== chars[1]) {
-						continue; // optimize
+						continue;
+					}
+					if (type === 'IMAGE' && content[index + nextSpecialCharIndex + 1] !== '[') {
+						continue;
 					}
 					if (nextSpecialCharIndex > 0) {
 						this.addTextToken(tokens, content.slice(index, index + nextSpecialCharIndex));
@@ -242,13 +246,36 @@ class InlineParser {
 						expectedNoteSubtype = undefined;
 						index = closeTokenIndex + 1;
 					} else if (closeTokenIndex !== undefined && tokens[closeTokenIndex]!.defaultAttribute) {
-						const newNode = new InlineNode('A', {
-							tokens: tokens.slice(index + 1, closeTokenIndex),
-							attributes: {href: tokens[closeTokenIndex]!.defaultAttribute!}, // add other link attributes
-						});
-						node.children.push(newNode);
+						if (tokens[index - 1]!.type === 'IMAGE') {
+							const innerTokens = tokens.slice(index + 1, closeTokenIndex);
+							if (innerTokens.length > 1) {
+								const newNode = new InlineNode('OBJECT', {
+									tokens: innerTokens,
+									attributes: {data: tokens[closeTokenIndex]!.defaultAttribute, ...parseAttributes(tokens[closeTokenIndex]!.attributes)},
+								});
+								node.children.push(newNode);
+							} else {
+								const newNode = new InlineNode('IMG', {
+									attributes: {
+										src: tokens[closeTokenIndex]!.defaultAttribute,
+										alt: innerTokens[0]!.text ?? '',
+										...parseAttributes(tokens[closeTokenIndex]!.attributes),
+									},
+								});
+								node.children.push(newNode);
+							}
+						} else {
+							const newNode = new InlineNode('A', {
+								tokens: tokens.slice(index + 1, closeTokenIndex),
+								attributes: {href: tokens[closeTokenIndex]!.defaultAttribute, ...parseAttributes(tokens[closeTokenIndex]!.attributes)},
+							});
+							node.children.push(newNode);
+						}
 						index = closeTokenIndex + 1;
 					} else {
+						if (tokens[index - 1]!.type === 'IMAGE') {
+							this.addTextNode(node.children, tokens[index - 1]!.text!);
+						}
 						this.addTextNode(node.children, token.text!);
 						index++;
 					}
@@ -261,6 +288,8 @@ class InlineParser {
 					});
 					node.children.push(newNode);
 					index = nextCellTokenIndex;
+				} else if (token.type === 'IMAGE') {
+					index++;
 				} else if (token.position?.includes('start')) {
 					let closeTokenIndex: number | undefined;
 					if (selfNestableTokenTypes.includes(token.type)) {

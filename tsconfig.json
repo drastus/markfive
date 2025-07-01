@@ -3,7 +3,7 @@
 		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true,
 		"lib": [
-			"ES2021",
+			"ES2022",
 			"DOM",
 			"DOM.Iterable",
 			"ScriptHost"

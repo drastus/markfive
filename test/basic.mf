@@ -4,7 +4,7 @@ Document title
 Chapter 1
 =========
 
-First parag~raph. The ~second~ sentence #includes# a [link](https://en.wikipedia.org/wiki/Requiem_(Verdi)).
+First parag~raph. The ~second~ sentence #includes# a [link](https://en.wikipedia.org/wiki/Requiem).
 The third sentence# is in the new line.
 
 {style="color: orange"}

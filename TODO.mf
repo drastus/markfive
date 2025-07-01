@@ -8,25 +8,29 @@
 |v| Notes
 |v| Typography
 |v| Escaping HTML
-|_| Templates
-|_| Images
+|v| Images
 |_| Blockquotes
 |_| Kbd and samp
 |_| Div and span
 |_| Internationalized typography
 |_| Description lists
 |_| Abbreviations
+|_| Small
+|_| Br and wbr
 |_| Escaping
 |_| Other HTML elements
+|_| Intra-word elements
+|_| Enhanced ordered lists
 |_| Comments
-|_| Small
-|_| Edits
+|_| Templates
 |_| Config
 |_| Colspans and rowspans
 |_| Numeric table headers
 |_| Figures
 |_| Metadata variables
 |_| Additional entities
+|_| Emojis
+|_| Edits
 |_| Chemical notation
 |_| Musical notation
 |_| Bibliography

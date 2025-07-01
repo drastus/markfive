@@ -1,0 +1,7 @@
+Here's a [link to ''Requiem'' by Verdi](https://en.wikipedia.org/wiki/Requiem_(Verdi)).
+
+Link with attributes: [link to ''Requiem'' by Verdi](https://en.wikipedia.org/wiki/Requiem_(Verdi)){.class.class2 #id}.
+
+Here we have an image: &[image of a tower](https://upload.wikimedia.org/wikipedia/commons/9/93/Altocumulusvirga.jpg){.class}.
+
+Here is the same image with formatted alt text: &[image of a *tower*](https://upload.wikimedia.org/wikipedia/commons/9/93/Altocumulusvirga.jpg){.class}.

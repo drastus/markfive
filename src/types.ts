@@ -74,7 +74,8 @@ export type InlineTokenType =
 	| 'S'
 	| 'TD'
 	| 'TH'
-	| 'MATH';
+	| 'MATH'
+	| 'IMAGE';
 
 export type InlineNodeType =
 	| 'TEXT'
@@ -95,7 +96,9 @@ export type InlineNodeType =
 	| 'S'
 	| 'A'
 	| 'INLINE_MATH'
-	| 'NOTE';
+	| 'NOTE'
+	| 'IMG'
+	| 'OBJECT';
 
 export type InlineToken = {
 	type: InlineTokenType,
