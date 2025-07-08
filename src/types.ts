@@ -28,7 +28,7 @@ export type LineTokenType =
 export type LineToken = {
 	type: LineTokenType,
 	line?: string,
-	indent?: string,
+	indent?: number,
 	marker?: string,
 	text?: string,
 	level?: number,

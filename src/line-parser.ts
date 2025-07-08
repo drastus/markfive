@@ -1,8 +1,23 @@
 /* eslint-disable no-useless-return */
 import BlockNode from './block-node';
-import {calculateIndent, parseAttributes} from './helpers';
+import {parseAttributes} from './helpers';
 import {markfiveMathToMathML} from './math-parser';
-import {type Options, type LineToken, type Node} from './types';
+import {type Options, type LineToken, type Node, type BlockNodeType} from './types';
+
+const isNestingAllowed = (parentNodeType: BlockNodeType, nodeType: BlockNodeType) => {
+	const allowedNestings: Partial<Record<BlockNodeType, BlockNodeType[]>> = {
+		PARAGRAPH: ['LINE'],
+		ORDERED_LIST: ['LIST_ITEM'],
+		UNORDERED_LIST: ['LIST_ITEM'],
+		TABLE: ['TABLE_ROW'],
+		TABLE_ROW: ['TABLE_CELL'],
+		BLOCK_CODE: ['LINE'],
+	};
+	if (allowedNestings[parentNodeType]) {
+		return allowedNestings[parentNodeType].includes(nodeType);
+	}
+	return true;
+};
 
 class LineParser {
 	tokens: LineToken[];
@@ -27,7 +42,7 @@ class LineParser {
 			node = node.children[node.children.length - 1]!;
 			depth++;
 		}
-		return node;
+		return node as BlockNode;
 	};
 
 	prevToken = () => this.tokens[this.current - 1]!;
@@ -37,6 +52,8 @@ class LineParser {
 		if (this.prevToken().type === 'EMPTY_LINE') {
 			return true;
 		} else if (this.prevToken().type === 'LINE_WITH_LIST_ITEM_MARK' && !this.prevToken().text) {
+			return true;
+		} else if (this.prevToken().type === 'LINE_WITH_BLOCK_QUOTE_MARK' && !this.prevToken().text) {
 			return true;
 		} else if (this.prevToken().type === 'LINE_WITH_ATTRIBUTES') {
 			if (this.tokens[this.current - 2]!.type === 'EMPTY_LINE' || this.tokens[this.current - 2] === undefined) {
@@ -54,62 +71,35 @@ class LineParser {
 		}
 	};
 
-	increasedIndent = (indent = '') => {
-		const newIndent = calculateIndent(indent);
-		return newIndent > this.indentStack[this.indentStack.length - 1]!;
-	};
+	increasedIndent = (indent = 0) => indent > this.indentStack.at(-1)!;
 
-	updateIndentStack = (node: BlockNode, indent: number) => {
-		const activeNode = this.activeNode();
-		const isSubnodeOfListItem = (
-			indent > this.indentStack[this.indentStack.length - 1]!
-				&& this.prevToken().type === 'LINE_WITH_LIST_ITEM_MARK'
-				&& !this.prevToken().text
-		);
-
-		if (['PARAGRAPH', 'BLOCK_CODE', 'BLOCK_QUOTE'].includes(activeNode.type) && node.type !== 'LINE') {
-			this.indentStack.pop();
-		}
-		if (['ORDERED_LIST', 'UNORDERED_LIST'].includes(activeNode.type) && !['LIST_ITEM', 'ORDERED_LIST', 'UNORDERED_LIST'].includes(node.type) && !isSubnodeOfListItem) {
-			this.indentStack.pop();
-		}
-		if (activeNode.type === 'TABLE' && node.type !== 'TABLE_ROW') {
-			this.indentStack.pop();
-		}
-		if (activeNode.type === 'TABLE_ROW' && node.type !== 'TABLE_CELL') {
-			this.indentStack.pop();
-		}
-		if (node.type === 'HEADING') {
-			this.indentStack = [];
-		}
-
-		if (indent < this.indentStack[this.indentStack.length - 1]!) {
-			const newIndentStackEnd = this.indentStack.findIndex((i) => i >= indent);
-			this.indentStack = this.indentStack.slice(0, newIndentStackEnd + 1);
-		} else if (isSubnodeOfListItem) {
-			this.indentStack.push(indent);
+	adaptIndentStack = (indent = 0) => {
+		if (indent < this.indentStack.at(-1)!) {
+			const newIndentStackEnd = (this.indentStack.findIndex((i) => i >= indent) ?? 0) + 1;
+			this.indentStack = this.indentStack.slice(0, newIndentStackEnd);
 		}
 	};
 
-	addNode = (node: BlockNode, indent = '', forcePushToIndentStack = false) => {
-		const newIndent = calculateIndent(indent);
-		this.updateIndentStack(node, newIndent);
+	addNode = (node: BlockNode, indent = 0, options: {cantHaveChildLines?: boolean, skipIndentAdapting?: boolean} = {}) => {
+		if (this.options.debug) console.log('adding node in active node', this.activeNode().type, 'with indent stack', this.indentStack);
+		if (!options.skipIndentAdapting) this.adaptIndentStack(indent);
 
-		const activeNode = this.activeNode();
+		let activeNode = this.activeNode();
+		if (!isNestingAllowed(activeNode.type, node.type)) {
+			this.indentStack.pop();
+			activeNode = this.activeNode();
+		}
 
 		activeNode.children.push(node);
-		if (this.options.debug) console.log('addNode', this.indentStack, activeNode.type, ' > ', node.type);
-
-		if (['PARAGRAPH', 'UNORDERED_LIST', 'ORDERED_LIST', 'BLOCK_QUOTE', 'BLOCK_CODE', 'TABLE'].includes(node.type)
-			|| forcePushToIndentStack
-		) {
-			this.indentStack.push(newIndent);
+		if (!options.cantHaveChildLines) {
+			this.indentStack.push(indent);
 		}
+		if (this.options.debug) console.log('       added node', node.type, 'with indent', indent, 'new indent stack', this.indentStack, 'new active node', this.activeNode().type);
 	};
 
 	addTextNode = (token: LineToken) => {
-		this.addNode(new BlockNode('LINE', {content: token.line!}), token.indent);
-		// or new paragraph, if activeNode don't allow new text line
+		this.addNode(new BlockNode('LINE', {content: token.line!}), token.indent, {cantHaveChildLines: true});
+		// or new paragraph, if activeNode doesn't allow new text line
 	};
 
 	parse = () => {
@@ -126,7 +116,6 @@ class LineParser {
 
 	parseToken = () => {
 		const token = this.tokens[this.current]!;
-		let newActiveNode: BlockNode;
 
 		if (token.type === 'EMPTY_LINE') {
 			const activeNode = this.activeNode();
@@ -151,10 +140,18 @@ class LineParser {
 		if (token.type === 'LINE_WITH_SEPARATOR_MARK') {
 			if (this.isOpenPosition()) {
 				if (this.tokens[this.current + 1]?.type === 'EMPTY_LINE') {
-					this.addNode(new BlockNode('SEPARATOR', {attributes: this.checkForAttributes()}));
+					this.addNode(
+						new BlockNode('SEPARATOR', {attributes: this.checkForAttributes()}),
+						token.indent,
+						{cantHaveChildLines: true},
+					);
 					this.current++;
 				} else {
-					this.addNode(new BlockNode('PARAGRAPH', {attributes: this.checkForAttributes()}));
+					this.addNode(
+						new BlockNode('PARAGRAPH', {attributes: this.checkForAttributes()}),
+						token.indent,
+						{cantHaveChildLines: true},
+					);
 				}
 			} else {
 				this.addTextNode(token);
@@ -165,16 +162,23 @@ class LineParser {
 		if (token.type === 'LINE_WITH_HEADING_MARK') {
 			if (this.isOpenPosition()) {
 				if (this.tokens[this.current + 1]?.type === 'EMPTY_LINE') {
+					this.indentStack = [];
 					this.addNode(
 						new BlockNode('HEADING', {
 							subtype: token.level!.toString(),
 							attributes: this.checkForAttributes(),
 							content: token.text,
 						}),
+						token.indent,
+						{cantHaveChildLines: true},
 					);
 					this.current++;
 				} else {
-					this.addNode(new BlockNode('PARAGRAPH', {attributes: this.checkForAttributes()}));
+					this.addNode(
+						new BlockNode('PARAGRAPH', {attributes: this.checkForAttributes()}),
+						token.indent,
+						{cantHaveChildLines: true},
+					);
 				}
 			} else {
 				this.addTextNode(token);
@@ -183,7 +187,7 @@ class LineParser {
 		}
 
 		if (token.type === 'TEXT_LINE') {
-			if (this.isOpenPosition()) { // include list items without any text
+			if (this.isOpenPosition()) { // include list items without any text and start of a blockquote
 				this.addNode(
 					new BlockNode('PARAGRAPH', {
 						attributes: this.checkForAttributes(),
@@ -200,49 +204,88 @@ class LineParser {
 		if (token.type === 'LINE_WITH_LIST_ITEM_MARK') {
 			const listType = token.marker === '-' ? 'UNORDERED_LIST' : 'ORDERED_LIST';
 			// add this.checkForAttributes()
-			if (this.increasedIndent(token.indent)) {
-				const newActiveNode = new BlockNode(listType);
-				this.addNode(newActiveNode, token.indent);
+			if (this.increasedIndent(token.indent)) { // new subitem
+				this.addNode(new BlockNode(listType), token.indent);
 			} else {
-				const newIndent = calculateIndent(token.indent!);
-				this.updateIndentStack(new BlockNode(listType), newIndent);
-				if (!['ORDERED_LIST', 'UNORDERED_LIST'].includes(this.activeNode().type)) {
-					this.addNode(new BlockNode(listType), token.indent);
+				this.adaptIndentStack(token.indent);
+				if (!['ORDERED_LIST', 'UNORDERED_LIST'].includes(this.activeNode().type)) { // new list
+					this.addNode(
+						new BlockNode(listType),
+						token.indent,
+						{skipIndentAdapting: true},
+					);
 				}
 			}
-			this.addNode(new BlockNode('LIST_ITEM', {
-				subtype: token.marker,
-				content: token.text,
-				attributes: parseAttributes(token.attributes),
-			}), token.indent);
+			const cantHaveChildLines = (this.tokens[this.current + 1]?.indent ?? 0) <= (token.indent ?? 0);
+			this.addNode( // new item
+				new BlockNode('LIST_ITEM', {
+					subtype: token.marker,
+					content: cantHaveChildLines ? token.text : undefined,
+					attributes: parseAttributes(token.attributes),
+				}),
+				token.indent,
+				{cantHaveChildLines, skipIndentAdapting: true},
+			);
+			if (!cantHaveChildLines && token.text) {
+				this.addNode(new BlockNode('LINE', {content: token.text}), token.indent, {cantHaveChildLines: true, skipIndentAdapting: true});
+			}
 			return;
 		}
 
-		if (token.type === 'LINE_WITH_BLOCK_QUOTE_MARK') { // for now only multi-line
-			newActiveNode = new BlockNode('BLOCK_QUOTE', {
-				attributes: parseAttributes(token.attributes),
-			});
-			this.addNode(newActiveNode, token.indent);
+		if (token.type === 'LINE_WITH_BLOCK_QUOTE_MARK') {
+			if ((this.tokens[this.current + 1]?.indent ?? 0) > (token.indent ?? 0)) {
+				this.addNode(
+					new BlockNode('BLOCK_QUOTE', {
+						attributes: parseAttributes(token.attributes),
+					}),
+					token.indent,
+				);
+			} else { // single-line
+				this.addNode(
+					new BlockNode('BLOCK_QUOTE', {
+						attributes: parseAttributes(token.attributes),
+					}),
+					token.indent,
+				);
+				this.addNode(
+					new BlockNode('PARAGRAPH', {
+						attributes: this.checkForAttributes(),
+						children: [new BlockNode('LINE', {content: token.text})],
+					}),
+					token.indent,
+					{cantHaveChildLines: true},
+				);
+				this.indentStack.pop();
+			}
 			return;
 		}
 
 		if (token.type === 'LINE_WITH_BLOCK_CODE_MARK') { // for now only multi-line
-			newActiveNode = new BlockNode('BLOCK_CODE', {
-				attributes: parseAttributes(token.attributes),
-			});
-			this.addNode(newActiveNode, token.indent);
+			this.addNode(
+				new BlockNode('BLOCK_CODE', {
+					attributes: parseAttributes(token.attributes),
+				}),
+				token.indent,
+			);
 			return;
 		}
 
 		if (token.type === 'LINE_WITH_TABLE_ROW_MARK') {
 			// add this.checkForAttributes()
 			if (this.activeNode().type !== 'TABLE') {
-				this.addNode(new BlockNode('TABLE'), token.indent);
+				this.addNode(
+					new BlockNode('TABLE'),
+					token.indent,
+				);
 			}
-			this.addNode(new BlockNode('TABLE_ROW', {
-				content: token.text,
-				attributes: parseAttributes(token.attributes),
-			}), token.indent);
+			this.addNode(
+				new BlockNode('TABLE_ROW', {
+					content: token.text,
+					attributes: parseAttributes(token.attributes),
+				}),
+				token.indent,
+				{cantHaveChildLines: true},
+			);
 			return;
 		}
 
@@ -251,34 +294,49 @@ class LineParser {
 			if (this.activeNode().type !== 'TABLE' && this.activeNode().type !== 'TABLE_ROW') {
 				this.addNode(new BlockNode('TABLE'), token.indent);
 			}
-			newActiveNode = new BlockNode('TABLE_ROW', {
-				attributes: parseAttributes(token.attributes),
-			});
-			this.addNode(newActiveNode, token.indent, true);
+			this.addNode(
+				new BlockNode('TABLE_ROW', {
+					attributes: parseAttributes(token.attributes),
+				}),
+				token.indent,
+			);
 			return;
 		}
 
 		if (token.type === 'LINE_WITH_TABLE_CELL_MARK') {
 			// add this.checkForAttributes()
 			if (this.activeNode().type !== 'TABLE' && this.activeNode().type !== 'TABLE_ROW') {
-				this.addNode(new BlockNode('TABLE'), token.indent);
-				newActiveNode = new BlockNode('TABLE_ROW', {
-					attributes: parseAttributes(token.attributes),
-				});
-				this.addNode(newActiveNode, token.indent, true);
+				this.addNode(
+					new BlockNode('TABLE'),
+					token.indent,
+				);
+				this.addNode(
+					new BlockNode('TABLE_ROW', {
+						attributes: parseAttributes(token.attributes),
+					}),
+					token.indent,
+				);
 			}
-			this.addNode(new BlockNode('TABLE_CELL', {
-				subtype: token.marker,
-				content: token.text,
-				attributes: parseAttributes(token.attributes),
-			}), token.indent);
+			this.addNode(
+				new BlockNode('TABLE_CELL', {
+					subtype: token.marker,
+					content: token.text,
+					attributes: parseAttributes(token.attributes),
+				}),
+				token.indent,
+				{cantHaveChildLines: true},
+			);
 			return;
 		}
 
 		if (token.type === 'LINE_WITH_MATH_MARK') {
-			this.addNode(new BlockNode('BLOCK_MATH', {
-				content: markfiveMathToMathML(token.text!, true, this.options.debug),
-			}), token.indent);
+			this.addNode(
+				new BlockNode('BLOCK_MATH', {
+					content: markfiveMathToMathML(token.text!, true, this.options.debug),
+				}),
+				token.indent,
+				{cantHaveChildLines: true},
+			);
 			return;
 		}
 	};

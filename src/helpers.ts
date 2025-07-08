@@ -47,7 +47,7 @@ export const stringifyAttributes = (attributes?: Record<string, string | string[
 	return string;
 };
 
-export const calculateIndent = (indent: string) => {
+export const calculateIndent = (indent = '') => {
 	const tabsCount = indent.split('\t').length - 1;
 	if (tabsCount > 0) {
 		return tabsCount;

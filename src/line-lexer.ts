@@ -1,4 +1,4 @@
-import {attributesRegexString} from './helpers';
+import {attributesRegexString, calculateIndent} from './helpers';
 import {type Options, type LineToken} from './types';
 
 class LineLexer {
@@ -62,7 +62,7 @@ class LineLexer {
 			this.tokens.push({
 				type: 'LINE_WITH_ATTRIBUTES',
 				line,
-				indent: match[1],
+				indent: calculateIndent(match[1]),
 				attributes: match[2],
 			});
 			return;
@@ -72,7 +72,7 @@ class LineLexer {
 			this.tokens.push({
 				type: 'LINE_WITH_LIST_ITEM_MARK',
 				line,
-				indent: match[1],
+				indent: calculateIndent(match[1]),
 				marker: match[2],
 				attributes: match[3],
 				text: match[4],
@@ -84,7 +84,7 @@ class LineLexer {
 			this.tokens.push({
 				type: 'LINE_WITH_BLOCK_QUOTE_MARK',
 				line,
-				indent: match[1],
+				indent: calculateIndent(match[1]),
 				attributes: match[2],
 				text: match[3],
 			});
@@ -95,7 +95,7 @@ class LineLexer {
 			this.tokens.push({
 				type: 'LINE_WITH_BLOCK_CODE_MARK',
 				line,
-				indent: match[1],
+				indent: calculateIndent(match[1]),
 				attributes: match[2],
 				text: match[3],
 			});
@@ -106,7 +106,7 @@ class LineLexer {
 			this.tokens.push({
 				type: 'LINE_WITH_TABLE_ROW_MARK',
 				line,
-				indent: match[1],
+				indent: calculateIndent(match[1]),
 				attributes: match[2],
 				text: match[3] + ' ' + match[4],
 			});
@@ -117,7 +117,7 @@ class LineLexer {
 			this.tokens.push({
 				type: 'LINE_WITH_TABLE_ROW_SEPARATOR_MARK',
 				line,
-				indent: match[1],
+				indent: calculateIndent(match[1]),
 				attributes: match[2],
 			});
 			return;
@@ -127,7 +127,7 @@ class LineLexer {
 			this.tokens.push({
 				type: 'LINE_WITH_TABLE_CELL_MARK',
 				line,
-				indent: match[1],
+				indent: calculateIndent(match[1]),
 				marker: match[2],
 				attributes: match[3],
 				text: match[4],
@@ -139,7 +139,7 @@ class LineLexer {
 			this.tokens.push({
 				type: 'LINE_WITH_MATH_MARK',
 				line,
-				indent: match[1],
+				indent: calculateIndent(match[1]),
 				text: match[3],
 			});
 			return;
@@ -148,7 +148,7 @@ class LineLexer {
 		this.tokens.push({
 			type: 'TEXT_LINE',
 			line,
-			indent: line.match(/^[ \t]*/)?.[0],
+			indent: calculateIndent(line.match(/^[ \t]*/)?.[0]),
 			text: line.trimStart(),
 		});
 	};

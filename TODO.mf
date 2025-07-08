@@ -9,13 +9,11 @@
 |v| Typography
 |v| Escaping HTML
 |v| Images
-|_| Blockquotes
+|v| Blockquotes
 |_| Kbd and samp
 |_| Div and span
 |_| Internationalized typography
 |_| Description lists
-|_| Abbreviations
-|_| Small
 |_| Br and wbr
 |_| Escaping
 |_| Other HTML elements
@@ -30,7 +28,9 @@
 |_| Metadata variables
 |_| Additional entities
 |_| Emojis
+|_| Small
 |_| Edits
+|_| Abbreviations
 |_| Chemical notation
 |_| Musical notation
 |_| Bibliography

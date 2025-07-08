@@ -10,6 +10,7 @@ const elementMappings: Record<string, string> = {
 	LIST_ITEM: 'li',
 	TABLE_ROW: 'tr',
 	SEPARATOR: 'hr',
+	BLOCK_QUOTE: 'blockquote',
 };
 const tableCellElementMappings: Record<string, string> = {
 	'|': 'td',
