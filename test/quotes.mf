@@ -16,3 +16,9 @@ Here is a two-paragraph quote:
 	Now when naturalists observe a close agreement in numerous small details of habits, tastes and dispositions between two or more domestic races, or between nearly-allied natural forms, they use this fact as an argument that all are descended from a common progenitor who was thus endowed; and consequently that all should be classed under the same species. The same argument may be applied with much force to the races of man.
 
 	As it is improbable that the numerous and unimportant points of resemblance between the several races of man in bodily structure and mental faculties (I do not here refer to similar customs) should all have been independently acquired, they must have been inherited from progenitors who were thus characterised.
+
+- First item
+- Second item
+-
+	"" Brief and powerless is Man's life; on him and all his race the slow, sure doom falls pitiless and dark.
+- Last item

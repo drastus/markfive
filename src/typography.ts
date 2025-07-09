@@ -7,6 +7,8 @@ class Typography {
 	openDoubleQuotes: Array<{node: Node, position: number}>;
 	openSingleQuotes: Array<{node: Node, position: number}>;
 
+	excludedTypes = ['BLOCK_CODE', 'CODE', 'KBD', 'SAMP', 'BLOCK_MATH', 'INLINE_MATH'];
+
 	constructor(ast: Node, options: Options) {
 		this.ast = ast;
 		this.options = options;
@@ -23,7 +25,7 @@ class Typography {
 
 	private processNode(node: Node) {
 		if (this.options.debug) console.log(`processNode ${node.type} ${node.content ?? ''}`);
-		if (node.type === 'BLOCK_CODE' || node.type === 'CODE' || node.type === 'BLOCK_MATH' || node.type === 'INLINE_MATH') {
+		if (this.excludedTypes.includes(node.type)) {
 			return;
 		}
 		if (['PARAGRAPH', 'HEADING', 'LIST_ITEM', 'TABLE_CELL'].includes(node.type)) {

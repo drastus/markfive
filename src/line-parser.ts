@@ -49,6 +49,9 @@ class LineParser {
 
 	isOpenPosition = () => {
 		if (this.current === 0) return true;
+		if (this.activeNode().type === 'BLOCK_CODE' && (this.tokens[this.current]?.indent ?? 0) > this.indentStack.at(-1)!) {
+			return false;
+		}
 		if (this.prevToken().type === 'EMPTY_LINE') {
 			return true;
 		} else if (this.prevToken().type === 'LINE_WITH_LIST_ITEM_MARK' && !this.prevToken().text) {
@@ -77,6 +80,9 @@ class LineParser {
 		if (indent < this.indentStack.at(-1)!) {
 			const newIndentStackEnd = (this.indentStack.findIndex((i) => i >= indent) ?? 0) + 1;
 			this.indentStack = this.indentStack.slice(0, newIndentStackEnd);
+			if (this.activeNode().type === 'BLOCK_QUOTE') {
+				this.indentStack.pop();
+			}
 		}
 	};
 
@@ -124,6 +130,12 @@ class LineParser {
 			} else if (activeNode.type === 'TABLE_ROW') {
 				this.indentStack.pop();
 				this.indentStack.pop();
+			} else if (activeNode.type === 'BLOCK_CODE') {
+				this.addNode(
+					new BlockNode('LINE'),
+					token.indent,
+					{cantHaveChildLines: true},
+				);
 			}
 			return;
 		}
@@ -256,17 +268,34 @@ class LineParser {
 					{cantHaveChildLines: true},
 				);
 				this.indentStack.pop();
+				this.indentStack.pop();
 			}
 			return;
 		}
 
-		if (token.type === 'LINE_WITH_BLOCK_CODE_MARK') { // for now only multi-line
-			this.addNode(
-				new BlockNode('BLOCK_CODE', {
-					attributes: parseAttributes(token.attributes),
-				}),
-				token.indent,
-			);
+		if (token.type === 'LINE_WITH_BLOCK_CODE_MARK') {
+			if ((this.tokens[this.current + 1]?.indent ?? 0) > (token.indent ?? 0)) {
+				this.addNode(
+					new BlockNode('BLOCK_CODE', {
+						attributes: parseAttributes(token.attributes),
+					}),
+					token.indent,
+				);
+			} else { // single-line
+				this.addNode(
+					new BlockNode('BLOCK_CODE', {
+						attributes: parseAttributes(token.attributes),
+					}),
+					token.indent,
+				);
+				this.addNode(
+					new BlockNode('LINE', {content: token.text}),
+					token.indent,
+					{cantHaveChildLines: true},
+				);
+				this.indentStack.pop();
+				this.indentStack.pop();
+			}
 			return;
 		}
 

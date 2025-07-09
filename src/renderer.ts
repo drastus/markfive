@@ -128,6 +128,7 @@ class Renderer {
 		}
 		if (node.type === 'BLOCK_CODE') {
 			this.newlineMode = 'n';
+			this.newlineRequired = false;
 			let string = `<pre${stringifyAttributes(node.attributes)}><code>`;
 			node.children.forEach((child: Node) => {
 				string += this.renderNode(child);
