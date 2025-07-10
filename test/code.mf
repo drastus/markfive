@@ -17,3 +17,19 @@ One-line code snippet:
 Inline code fragment: `print('Hello, world!')`.
 
 Inline command: >npm install --save>.
+
+> npm install
+> npm build
+> npm start
+
+< traceroute to reddit.com (151.101.65.140), 64 hops max
+<  1   192.168.0.1  0.678ms  0.629ms  0.613ms
+<  2   192.168.2.1  0.885ms  0.808ms  0.637ms
+<  3   10.31.52.1  1.408ms  1.282ms  1.083ms
+<  4   10.100.100.101  1.788ms  1.673ms  1.447ms
+<  5   46.227.240.154  2.228ms  2.408ms  1.766ms
+<  6   185.228.111.181  3.672ms  2.120ms  1.925ms
+<  7   212.133.62.29  21.250ms  17.082ms  15.658ms
+<  8   *  *  *
+<  9   *  *  *
+< 10   *  *  *

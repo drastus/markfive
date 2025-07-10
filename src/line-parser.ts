@@ -12,6 +12,8 @@ const isNestingAllowed = (parentNodeType: BlockNodeType, nodeType: BlockNodeType
 		TABLE: ['TABLE_ROW'],
 		TABLE_ROW: ['TABLE_CELL'],
 		BLOCK_CODE: ['LINE'],
+		BLOCK_KBD: ['LINE'],
+		BLOCK_SAMP: ['LINE'],
 	};
 	if (allowedNestings[parentNodeType]) {
 		return allowedNestings[parentNodeType].includes(nodeType);
@@ -296,6 +298,40 @@ class LineParser {
 				this.indentStack.pop();
 				this.indentStack.pop();
 			}
+			return;
+		}
+
+		if (token.type === 'LINE_WITH_BLOCK_KBD_MARK') {
+			if (this.activeNode().type !== 'BLOCK_KBD') {
+				this.addNode(
+					new BlockNode('BLOCK_KBD', {
+						attributes: parseAttributes(token.attributes),
+					}),
+					token.indent,
+				);
+			}
+			this.addNode(
+				new BlockNode('LINE', {content: token.text}),
+				token.indent,
+				{cantHaveChildLines: true},
+			);
+			return;
+		}
+
+		if (token.type === 'LINE_WITH_BLOCK_SAMP_MARK') {
+			if (this.activeNode().type !== 'BLOCK_SAMP') {
+				this.addNode(
+					new BlockNode('BLOCK_SAMP', {
+						attributes: parseAttributes(token.attributes),
+					}),
+					token.indent,
+				);
+			}
+			this.addNode(
+				new BlockNode('LINE', {content: token.text}),
+				token.indent,
+				{cantHaveChildLines: true},
+			);
 			return;
 		}
 

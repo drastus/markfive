@@ -135,6 +135,24 @@ class Renderer {
 			});
 			return `${string}</code></pre>\n`;
 		}
+		if (node.type === 'BLOCK_KBD') {
+			this.newlineMode = 'n';
+			this.newlineRequired = false;
+			let string = `<pre><kbd${stringifyAttributes(node.attributes)}>`;
+			node.children.forEach((child: Node) => {
+				string += this.renderNode(child);
+			});
+			return `${string}</kbd></pre>\n`;
+		}
+		if (node.type === 'BLOCK_SAMP') {
+			this.newlineMode = 'n';
+			this.newlineRequired = false;
+			let string = `<pre><samp${stringifyAttributes(node.attributes)}>`;
+			node.children.forEach((child: Node) => {
+				string += this.renderNode(child);
+			});
+			return `${string}</samp></pre>\n`;
+		}
 		if (node.type === 'BLOCK_MATH') {
 			this.isMathUsed = true;
 			return node.content + '\n';
