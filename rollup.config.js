@@ -1,6 +1,6 @@
+import copy from '@guanghechen/rollup-plugin-copy';
 import typescript from '@rollup/plugin-typescript';
 import {nodeResolve} from '@rollup/plugin-node-resolve';
-import copy from 'rollup-plugin-copy';
 
 export default [
 	{

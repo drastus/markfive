@@ -10,7 +10,7 @@
 |v| Escaping HTML
 |v| Images
 |v| Blockquotes
-|_| Kbd and samp
+|v| Kbd and samp
 |_| Div and span
 |_| Internationalized typography
 |_| Description lists
@@ -20,6 +20,7 @@
 |_| Intra-word elements
 |_| Enhanced ordered lists
 |_| Comments
+|_| Hgroups and multi-line headers
 |_| Templates
 |_| Config
 |_| Colspans and rowspans

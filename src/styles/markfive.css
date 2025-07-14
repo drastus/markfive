@@ -1,11 +1,50 @@
 body {
 	font-family: 'Noto Sans', sans-serif;
+	color: #111;
 }
 
 @media print {
 	body {
 		font-family: 'Noto Serif', serif;
+		color: #000;
 	}
+}
+
+samp {
+	color: #333;
+}
+
+kbd samp {
+	color: #111;
+}
+
+.mf-key, .mf-button {
+	white-space: nowrap;
+}
+
+.mf-key {
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	padding: 2px 4px;
+}
+
+.mf-key-joiner {
+	margin: 0 2px;
+}
+
+.mf-button {
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	padding: 2px 4px;
+	background-color: #eee;
+}
+
+.mf-button:hover {
+	background-color: #ccc;
+}
+
+.mf-button-separator {
+	color: #ccc;
 }
 
 .mf-note,

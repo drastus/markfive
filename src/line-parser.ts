@@ -1,6 +1,6 @@
 /* eslint-disable no-useless-return */
 import BlockNode from './block-node';
-import {parseAttributes} from './helpers';
+import {parseAttributes, trimIndent} from './helpers';
 import {markfiveMathToMathML} from './math-parser';
 import {type Options, type LineToken, type Node, type BlockNodeType} from './types';
 
@@ -25,6 +25,7 @@ class LineParser {
 	tokens: LineToken[];
 	current: number;
 	indentStack: number[];
+	codeIndent: number;
 	ast: Node;
 	lastAttributes?: string;
 	options: Options;
@@ -33,6 +34,7 @@ class LineParser {
 		this.tokens = tokens;
 		this.current = 0;
 		this.indentStack = [];
+		this.codeIndent = 0;
 		this.ast = new BlockNode('DOCUMENT');
 		this.options = options;
 	}
@@ -106,7 +108,16 @@ class LineParser {
 	};
 
 	addTextNode = (token: LineToken) => {
-		this.addNode(new BlockNode('LINE', {content: token.line!}), token.indent, {cantHaveChildLines: true});
+		let content = token.line!;
+		if (this.activeNode().type === 'BLOCK_CODE') {
+			if (this.codeIndent === 0) this.codeIndent = token.indent!;
+			content = trimIndent(content, this.codeIndent);
+		}
+		this.addNode(
+			new BlockNode('LINE', {content}),
+			token.indent,
+			{cantHaveChildLines: true},
+		);
 		// or new paragraph, if activeNode doesn't allow new text line
 	};
 
@@ -283,6 +294,7 @@ class LineParser {
 					}),
 					token.indent,
 				);
+				this.codeIndent = 0;
 			} else { // single-line
 				this.addNode(
 					new BlockNode('BLOCK_CODE', {

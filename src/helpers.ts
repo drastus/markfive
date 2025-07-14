@@ -56,11 +56,25 @@ export const calculateIndent = (indent = '') => {
 	}
 };
 
+export const trimIndent = (text: string, indent = 1) => (
+	text.replace(new RegExp(`^(${' '.repeat(indent)}|${'\t'.repeat(indent)})`, 'gm'), '')
+);
+
 export const findIndexInRange = <T>(array: T[], predicate: (item: T) => unknown, from: number, to?: number) => {
 	const index = array.slice(from).findIndex(predicate);
 	if (index < 0) return undefined;
 	if (to !== undefined && from + index > to) return undefined;
 	return from + index;
+};
+
+export const findIndicesInRange = <T>(array: T[], predicate: (item: T) => unknown, from: number, to?: number) => {
+	const indices: number[] = [];
+	let index = findIndexInRange(array, predicate, from, to);
+	while (index !== undefined) {
+		indices.push(index);
+		index = findIndexInRange(array, predicate, index + 1, to);
+	}
+	return indices;
 };
 
 export const trimAndJoin = (array: string[]) => array

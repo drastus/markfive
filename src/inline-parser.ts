@@ -1,5 +1,5 @@
 import type BlockNode from './block-node';
-import {attributesRegexString, findIndexInRange, parseAttributes} from './helpers';
+import {attributesRegexString, findIndexInRange, findIndicesInRange, parseAttributes} from './helpers';
 import InlineNode from './inline-node';
 import {markfiveMathToMathML} from './math-parser';
 import type {
@@ -8,10 +8,15 @@ import type {
 
 const specialChars = /[#*[\]{}"'`:~^!|/_=$<>&-]/;
 
-const commonTokens: Array<{chars: string, type: InlineTokenType}> = [
+const commonTokens: Array<{chars: string, type: InlineTokenType, position?: 'start' | 'end'}> = [
+	{chars: ']+[', type: 'KEY_JOINER'},
 	{chars: '\'\'', type: 'CITE'},
 	{chars: '__', type: 'U'},
 	{chars: '--', type: 'S'},
+	{chars: '[[', type: 'KEY', position: 'start'},
+	{chars: ']]', type: 'KEY', position: 'end'},
+	{chars: '[|', type: 'BUTTON', position: 'start'},
+	{chars: '|]', type: 'BUTTON', position: 'end'},
 	{chars: '#', type: 'B'},
 	{chars: '/', type: 'I'},
 	{chars: '~', type: 'EM'},
@@ -25,6 +30,7 @@ const commonTokens: Array<{chars: string, type: InlineTokenType}> = [
 	{chars: '>', type: 'KBD'},
 	{chars: '<', type: 'SAMP'},
 	{chars: '&', type: 'IMAGE'},
+	{chars: '|', type: 'BUTTON_SEPARATOR'}, // should be last
 ];
 const tableRowTokens: Array<{chars: string, type: InlineTokenType}> = [
 	{chars: '|', type: 'TD'},
@@ -84,7 +90,7 @@ class InlineParser {
 		}
 
 		const availableTokens = type === 'TABLE_ROW'
-			? commonTokens.concat(tableRowTokens)
+			? commonTokens.slice(0, -1).concat(tableRowTokens)
 			: commonTokens;
 
 		while (index < content.length) {
@@ -98,9 +104,12 @@ class InlineParser {
 				break;
 			}
 
-			for (const {chars, type} of availableTokens) {
+			for (let {chars, type, position} of availableTokens) {
 				if (content[index + nextSpecialCharIndex] === chars[0]) {
 					if (chars.length === 2 && content[index + nextSpecialCharIndex + 1] !== chars[1]) {
+						continue;
+					}
+					if (chars.length === 3 && content[index + nextSpecialCharIndex + 1] !== chars[1] && content[index + nextSpecialCharIndex + 2] !== chars[2]) {
 						continue;
 					}
 					if (type === 'IMAGE' && content[index + nextSpecialCharIndex + 1] !== '[') {
@@ -116,37 +125,41 @@ class InlineParser {
 					const prevIsWhitespace = /^(\p{Z})/u.test(content[index + nextSpecialCharIndex - 1] ?? '');
 					const nextIsWhitespace = /^(\p{Z})/u.test(content[index + nextSpecialCharIndex + consumedChars] ?? '');
 					if (
-						(prevIsAlphanumeric && nextIsAlphanumeric && !['SUP', 'SUB'].includes(type))
-						|| ((prevIsWhitespace && nextIsWhitespace) && !['TD', 'TH'].includes(type))
-						|| ((prevIsAlphanumeric || nextIsAlphanumeric) && ['TD', 'TH'].includes(type))
+						(prevIsAlphanumeric && nextIsAlphanumeric && !['SUP', 'SUB', 'KEY_JOINER', 'BUTTON_SEPARATOR'].includes(type))
+						|| (prevIsWhitespace && nextIsWhitespace && !['TD', 'TH'].includes(type))
+						|| ((prevIsAlphanumeric || nextIsAlphanumeric) && type === 'TH')
 					) {
 						this.addTextToken(tokens, content.slice(
 							index + nextSpecialCharIndex,
 							index + nextSpecialCharIndex + consumedChars,
 						));
 					} else {
-						const position: Array<'start' | 'end'> = [];
-						if (!prevIsAlphanumeric && !nextIsWhitespace) {
-							position.push('start');
+						if (type === 'TD' && (prevIsAlphanumeric || nextIsAlphanumeric)) {
+							type = 'BUTTON_SEPARATOR';
 						}
-						if (!nextIsAlphanumeric && !prevIsWhitespace) {
-							position.push('end');
+
+						const positions: Array<'start' | 'end'> = [];
+						if (!prevIsAlphanumeric && !nextIsWhitespace && position !== 'end') {
+							positions.push('start');
+						}
+						if (!nextIsAlphanumeric && !prevIsWhitespace && position !== 'start') {
+							positions.push('end');
 						}
 						if (['SUB', 'SUP'].includes(type)) {
 							if (!prevIsWhitespace) {
-								position.push('start');
+								positions.push('start');
 							}
 							if (!nextIsWhitespace) {
-								position.push('end');
+								positions.push('end');
 							}
 						}
 						const newToken: InlineToken = {
 							type,
-							position,
+							positions,
 							text: content.slice(index + nextSpecialCharIndex, index + nextSpecialCharIndex + consumedChars),
 						};
 						const contentRest = content.slice(index + nextSpecialCharIndex + consumedChars);
-						if (!position.includes('start')) {
+						if (!positions.includes('start')) {
 							match = contentRest.match(`^${attributesRegexString}`);
 							if (match?.[1]) {
 								newToken.attributes = match[1];
@@ -209,160 +222,227 @@ class InlineParser {
 		let index = 0;
 		let expectedNoteSubtype: string | undefined;
 
-		if (node.type !== 'INLINE_MATH') {
-			while (index < tokens.length) {
-				const token = tokens[index]!;
-				let attributes: Record<string, string | string[]> | undefined;
+		if (node.type === 'INLINE_MATH') index = tokens.length; // don't parse inline math
 
-				if (token.type === 'MATH') {
-					index++;
-					continue;
-				}
-				if (token.type === 'BRACKET_OPEN') {
-					const closeTokenIndex = findIndexInRange<InlineToken>(
-						tokens, (t) => t.type === 'BRACKET_CLOSE', index + 1,
-					);
-					if (closeTokenIndex !== undefined
-						&& tokens.slice(index + 1, closeTokenIndex).every((t) => t.text === '*')
-						&& !expectedNoteSubtype
-						&& !tokens[closeTokenIndex]!.defaultAttribute
-					) {
-						expectedNoteSubtype = '*'.repeat(tokens.slice(index + 1, closeTokenIndex).length);
-						index = closeTokenIndex + 1;
-					} else if (closeTokenIndex !== undefined
-						&& (expectedNoteSubtype
-							|| (tokens.slice(index + 1, closeTokenIndex).every((t) => t.text === '*')
-								&& tokens[closeTokenIndex]!.defaultAttribute
-							)
+		while (index < tokens.length) {
+			const token = tokens[index]!;
+			let attributes: Record<string, string | string[]> | undefined;
+
+			if (token.type === 'MATH') {
+				index++;
+				continue;
+			}
+			if (token.type === 'BRACKET_OPEN') {
+				const closeTokenIndex = findIndexInRange<InlineToken>(
+					tokens, (t) => t.type === 'BRACKET_CLOSE', index + 1,
+				);
+				if (closeTokenIndex !== undefined
+					&& tokens.slice(index + 1, closeTokenIndex).every((t) => t.text === '*')
+					&& !expectedNoteSubtype
+					&& !tokens[closeTokenIndex]!.defaultAttribute
+				) {
+					expectedNoteSubtype = '*'.repeat(tokens.slice(index + 1, closeTokenIndex).length);
+					index = closeTokenIndex + 1;
+				} else if (closeTokenIndex !== undefined
+					&& (expectedNoteSubtype
+						|| (tokens.slice(index + 1, closeTokenIndex).every((t) => t.text === '*')
+							&& tokens[closeTokenIndex]!.defaultAttribute
 						)
-					) {
-						const newNode = new InlineNode('NOTE', {
-							subtype: expectedNoteSubtype ?? tokens.slice(index + 1, closeTokenIndex).map((t) => t.text).join(''),
-							id: parseAttributes(tokens[closeTokenIndex]!.defaultAttribute)?.id as string | undefined,
-							tokens: tokens.slice(index + 1, closeTokenIndex),
-							attributes: parseAttributes(tokens[closeTokenIndex]!.attributes),
-						});
-						node.children.push(newNode);
-						expectedNoteSubtype = undefined;
-						index = closeTokenIndex + 1;
-					} else if (closeTokenIndex !== undefined && tokens[closeTokenIndex]!.defaultAttribute) {
-						if (tokens[index - 1]!.type === 'IMAGE') {
-							const innerTokens = tokens.slice(index + 1, closeTokenIndex);
-							if (innerTokens.length > 1) {
-								const newNode = new InlineNode('OBJECT', {
-									tokens: innerTokens,
-									attributes: {data: tokens[closeTokenIndex]!.defaultAttribute, ...parseAttributes(tokens[closeTokenIndex]!.attributes)},
-								});
-								node.children.push(newNode);
-							} else {
-								const newNode = new InlineNode('IMG', {
-									attributes: {
-										src: tokens[closeTokenIndex]!.defaultAttribute,
-										alt: innerTokens[0]!.text ?? '',
-										...parseAttributes(tokens[closeTokenIndex]!.attributes),
-									},
-								});
-								node.children.push(newNode);
-							}
+					)
+				) {
+					const newNode = new InlineNode('NOTE', {
+						subtype: expectedNoteSubtype ?? tokens.slice(index + 1, closeTokenIndex).map((t) => t.text).join(''),
+						id: parseAttributes(tokens[closeTokenIndex]!.defaultAttribute)?.id as string | undefined,
+						tokens: tokens.slice(index + 1, closeTokenIndex),
+						attributes: parseAttributes(tokens[closeTokenIndex]!.attributes),
+					});
+					node.children.push(newNode);
+					expectedNoteSubtype = undefined;
+					index = closeTokenIndex + 1;
+				} else if (closeTokenIndex !== undefined && tokens[closeTokenIndex]!.defaultAttribute) {
+					if (tokens[index - 1]!.type === 'IMAGE') {
+						const innerTokens = tokens.slice(index + 1, closeTokenIndex);
+						if (innerTokens.length > 1) {
+							const newNode = new InlineNode('OBJECT', {
+								tokens: innerTokens,
+								attributes: {data: tokens[closeTokenIndex]!.defaultAttribute, ...parseAttributes(tokens[closeTokenIndex]!.attributes)},
+							});
+							node.children.push(newNode);
 						} else {
-							const newNode = new InlineNode('A', {
-								tokens: tokens.slice(index + 1, closeTokenIndex),
-								attributes: {href: tokens[closeTokenIndex]!.defaultAttribute, ...parseAttributes(tokens[closeTokenIndex]!.attributes)},
+							const newNode = new InlineNode('IMG', {
+								attributes: {
+									src: tokens[closeTokenIndex]!.defaultAttribute,
+									alt: innerTokens[0]!.text ?? '',
+									...parseAttributes(tokens[closeTokenIndex]!.attributes),
+								},
 							});
 							node.children.push(newNode);
 						}
-						index = closeTokenIndex + 1;
 					} else {
-						if (tokens[index - 1]!.type === 'IMAGE') {
-							this.addTextNode(node.children, tokens[index - 1]!.text!);
-						}
-						this.addTextNode(node.children, token.text!);
-						index++;
+						const newNode = new InlineNode('A', {
+							tokens: tokens.slice(index + 1, closeTokenIndex),
+							attributes: {href: tokens[closeTokenIndex]!.defaultAttribute, ...parseAttributes(tokens[closeTokenIndex]!.attributes)},
+						});
+						node.children.push(newNode);
 					}
-				} else if (['TD', 'TH'].includes(token.type)) {
-					const nextCellTokenIndex = findIndexInRange<InlineToken>(
-						tokens, (t) => ['TD', 'TH'].includes(t.type), index + 1,
-					) ?? tokens.length;
-					const newNode = new InlineNode(token.type as InlineNodeType, {
-						tokens: tokens.slice(index + 1, nextCellTokenIndex),
-					});
-					node.children.push(newNode);
-					index = nextCellTokenIndex;
-				} else if (token.type === 'IMAGE') {
+					index = closeTokenIndex + 1;
+				} else {
+					if (tokens[index - 1]!.type === 'IMAGE') {
+						this.addTextNode(node.children, tokens[index - 1]!.text!);
+					}
+					this.addTextNode(node.children, token.text!);
 					index++;
-				} else if (token.position?.includes('start')) {
-					let closeTokenIndex: number | undefined;
-					if (selfNestableTokenTypes.includes(token.type)) {
-						let startIndex = index + 1;
-						let newTokenIndex: number | undefined;
-						let depth = 1;
-						do {
-							newTokenIndex = findIndexInRange<InlineToken>(
-								tokens, (t) => t.type === token.type, startIndex,
-							);
-							if (newTokenIndex !== undefined) {
-								if (tokens[newTokenIndex]!.position?.includes('end') && newTokenIndex > startIndex) {
-									closeTokenIndex = newTokenIndex;
-									if (tokens[newTokenIndex]!.attributes) {
-										attributes = parseAttributes(tokens[newTokenIndex]!.attributes);
-									}
-									depth -= 1;
-								} else {
-									depth += 1;
+				}
+			} else if (['TD', 'TH'].includes(token.type)) {
+				const nextCellTokenIndex = findIndexInRange<InlineToken>(
+					tokens, (t) => ['TD', 'TH'].includes(t.type), index + 1,
+				) ?? tokens.length;
+				const newNode = new InlineNode(token.type as InlineNodeType, {
+					tokens: tokens.slice(index + 1, nextCellTokenIndex),
+				});
+				node.children.push(newNode);
+				index = nextCellTokenIndex;
+			} else if (token.type === 'IMAGE') {
+				index++;
+			} else if (token.positions?.includes('start')) {
+				let closeTokenIndex: number | undefined;
+				if (selfNestableTokenTypes.includes(token.type)) {
+					let startIndex = index + 1;
+					let newTokenIndex: number | undefined;
+					let depth = 1;
+					do {
+						newTokenIndex = findIndexInRange<InlineToken>(
+							tokens, (t) => t.type === token.type, startIndex,
+						);
+						if (newTokenIndex !== undefined) {
+							if (tokens[newTokenIndex]!.positions?.includes('end') && newTokenIndex > startIndex) {
+								closeTokenIndex = newTokenIndex;
+								if (tokens[newTokenIndex]!.attributes) {
+									attributes = parseAttributes(tokens[newTokenIndex]!.attributes);
 								}
-								startIndex = newTokenIndex + 1;
+								depth -= 1;
+							} else {
+								depth += 1;
 							}
-						} while (depth > 0 && newTokenIndex !== undefined);
-					} else {
-						closeTokenIndex = findIndexInRange<InlineToken>(
-							tokens, (t) => t.type === token.type && t.position?.includes('end'), index + 1,
+							startIndex = newTokenIndex + 1;
+						}
+					} while (depth > 0 && newTokenIndex !== undefined);
+				} else { // non-self-nestable
+					closeTokenIndex = findIndexInRange<InlineToken>(
+						tokens, (t) => t.type === token.type && t.positions?.includes('end'), index + 1,
+					);
+				}
+				if (closeTokenIndex !== undefined) { // close token found
+					let newNode = new InlineNode(
+						token.type as InlineNodeType,
+						{tokens: tokens.slice(index + 1, closeTokenIndex), attributes},
+					);
+					if (token.type === 'KEY') {
+						const joinerIndices = findIndicesInRange<InlineToken>(
+							tokens, (t) => t.type === 'KEY_JOINER', index + 1, closeTokenIndex,
 						);
-					}
-					if (closeTokenIndex !== undefined) {
-						let newNode = new InlineNode(
-							token.type as InlineNodeType,
-							{tokens: tokens.slice(index + 1, closeTokenIndex), attributes},
-						);
-						const contentText = tokens.slice(index + 1, closeTokenIndex).map((t) => t.text).join('');
-						if (token.type === 'VAR') {
-							if (!this.canBeVar(contentText)) {
-								newNode = new InlineNode(
-									'INLINE_MATH',
+						if (joinerIndices.length > 0) {
+							newNode = new InlineNode(
+								'KBD',
+								{children: [], attributes},
+							);
+							let subindex = index + 1;
+							for (const joinerIndex of joinerIndices) {
+								newNode.children.push(new InlineNode(
+									'KEY',
 									{
-										content: markfiveMathToMathML(contentText, false, this.options.debug),
+										tokens: tokens.slice(subindex, joinerIndex),
 										attributes,
 									},
-								);
+								));
+								newNode.children.push(new InlineNode('KEY_JOINER'));
+								subindex = joinerIndex + 1;
 							}
-						}
-						if (['SUP', 'SUB'].includes(token.type)
-							&& (((tokens[index - 1]?.type !== 'TEXT' || tokens[index - 1]?.text!.endsWith(' '))
-								&& (tokens[closeTokenIndex + 1]?.type !== 'TEXT' || tokens[closeTokenIndex + 1]?.text!.startsWith(' ')))
-								|| contentText.includes(' '))
-						) {
-							if (tokens[index + 1]!.type === 'BRACKET_OPEN' && tokens[closeTokenIndex - 1]!.type === 'BRACKET_CLOSE') {
-								newNode = new InlineNode(token.type as InlineNodeType, {
-									tokens: tokens.slice(index + 2, closeTokenIndex - 1),
+							newNode.children.push(new InlineNode(
+								'KEY',
+								{
+									tokens: tokens.slice(subindex, closeTokenIndex),
 									attributes,
-								});
-								node.children.push(newNode);
-							} else {
-								this.addTextNode(node.children, token.text + contentText + tokens[closeTokenIndex]!.text);
-							}
-						} else {
-							node.children.push(newNode);
+								},
+							));
 						}
+						node.children.push(newNode);
 						index = closeTokenIndex + 1;
-					} else {
-						this.addTextNode(node.children, token.text!);
-						index++;
+						continue;
 					}
+					if (token.type === 'BUTTON') {
+						const separatorIndices = findIndicesInRange<InlineToken>(
+							tokens, (t) => t.type === 'BUTTON_SEPARATOR', index + 1, closeTokenIndex,
+						);
+						if (separatorIndices.length > 0) {
+							newNode = new InlineNode(
+								'KBD',
+								{children: [], attributes},
+							);
+							let subindex = index + 1;
+							for (const separatorIndex of separatorIndices) {
+								newNode.children.push(new InlineNode(
+									'BUTTON',
+									{
+										tokens: tokens.slice(subindex, separatorIndex),
+										attributes,
+									},
+								));
+								newNode.children.push(new InlineNode('BUTTON_SEPARATOR'));
+								subindex = separatorIndex + 1;
+							}
+							newNode.children.push(new InlineNode(
+								'BUTTON',
+								{
+									tokens: tokens.slice(subindex, closeTokenIndex),
+									attributes,
+								},
+							));
+						}
+						node.children.push(newNode);
+						index = closeTokenIndex + 1;
+						continue;
+					}
+					const contentText = tokens.slice(index + 1, closeTokenIndex).map((t) => t.text).join('');
+					if (token.type === 'VAR') {
+						if (!this.canBeVar(contentText)) {
+							newNode = new InlineNode(
+								'INLINE_MATH',
+								{
+									content: markfiveMathToMathML(contentText, false, this.options.debug),
+									attributes,
+								},
+							);
+						}
+					}
+					if (['SUP', 'SUB'].includes(token.type)
+						&& (((tokens[index - 1]?.type !== 'TEXT' || tokens[index - 1]?.text!.endsWith(' '))
+							&& (tokens[closeTokenIndex + 1]?.type !== 'TEXT' || tokens[closeTokenIndex + 1]?.text!.startsWith(' ')))
+							|| contentText.includes(' '))
+					) {
+						if (tokens[index + 1]!.type === 'BRACKET_OPEN' && tokens[closeTokenIndex - 1]!.type === 'BRACKET_CLOSE') {
+							newNode = new InlineNode(token.type as InlineNodeType, {
+								tokens: tokens.slice(index + 2, closeTokenIndex - 1),
+								attributes,
+							});
+							node.children.push(newNode);
+						} else {
+							this.addTextNode(node.children, token.text + contentText + tokens[closeTokenIndex]!.text);
+						}
+					} else {
+						node.children.push(newNode);
+					}
+					index = closeTokenIndex + 1;
 				} else {
 					this.addTextNode(node.children, token.text!);
 					index++;
 				}
+			} else {
+				this.addTextNode(node.children, token.text!);
+				index++;
 			}
 		}
+
 		if (node.type === 'TEXT' && node.children.length === 1 && node.children[0]!.type === 'TEXT') {
 			node.children = [];
 		}

@@ -52,6 +52,8 @@ export type BlockNodeType =
 	| 'BLOCK_QUOTE'
 	| 'BLOCK_KBD'
 	| 'BLOCK_SAMP'
+	| 'KEY'
+	| 'BUTTON'
 	| 'TABLE'
 	| 'TABLE_ROW'
 	| 'TABLE_CELL'
@@ -70,6 +72,10 @@ export type InlineTokenType =
 	| 'SUB'
 	| 'CODE'
 	| 'KBD'
+	| 'KEY'
+	| 'KEY_JOINER'
+	| 'BUTTON'
+	| 'BUTTON_SEPARATOR'
 	| 'SAMP'
 	| 'CITE'
 	| 'B'
@@ -93,6 +99,10 @@ export type InlineNodeType =
 	| 'CODE'
 	| 'KBD'
 	| 'SAMP'
+	| 'KEY'
+	| 'KEY_JOINER'
+	| 'BUTTON'
+	| 'BUTTON_SEPARATOR'
 	| 'CITE'
 	| 'B'
 	| 'I'
@@ -106,7 +116,7 @@ export type InlineNodeType =
 
 export type InlineToken = {
 	type: InlineTokenType,
-	position?: Array<'start' | 'end'>,
+	positions?: Array<'start' | 'end'>,
 	text?: string,
 	attributes?: string,
 	defaultAttribute?: string,

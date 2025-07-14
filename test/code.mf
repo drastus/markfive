@@ -18,6 +18,14 @@ Inline code fragment: `print('Hello, world!')`.
 
 Inline command: >npm install --save>.
 
+Press [[Enter]] key.
+
+Press [[Print Scrn]] key. Then [[Alt]+[Ctrl]+[Del]].
+
+Click [|OK|] button.
+
+Choose [|File|Save as...|] command.
+
 > npm install
 > npm build
 > npm start

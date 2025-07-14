@@ -153,6 +153,28 @@ class Renderer {
 			});
 			return `${string}</samp></pre>\n`;
 		}
+		if (node.type === 'KEY') {
+			const attributes = stringifyAttributes({...node.attributes, class: [...(node.attributes?.class ?? []), 'mf-key']});
+			let string = `<kbd${attributes}>`;
+			node.children.forEach((child: Node) => {
+				string += this.renderNode(child);
+			});
+			return `${string}</kbd>`;
+		}
+		if (node.type === 'KEY_JOINER') {
+			return '<span class="mf-key-joiner">+</span>';
+		}
+		if (node.type === 'BUTTON') {
+			const attributes = stringifyAttributes({...node.attributes, class: [...(node.attributes?.class ?? []), 'mf-button']});
+			let string = `<kbd${attributes}><samp>`;
+			node.children.forEach((child: Node) => {
+				string += this.renderNode(child);
+			});
+			return `${string}</samp></kbd>`;
+		}
+		if (node.type === 'BUTTON_SEPARATOR') {
+			return '<span class="mf-button-separator">|</span>';
+		}
 		if (node.type === 'BLOCK_MATH') {
 			this.isMathUsed = true;
 			return node.content + '\n';
