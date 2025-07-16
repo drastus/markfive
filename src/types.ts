@@ -18,6 +18,7 @@ export type LineTokenType =
 	| 'LINE_WITH_BLOCK_QUOTE_MARK'
 	| 'LINE_WITH_BLOCK_KBD_MARK'
 	| 'LINE_WITH_BLOCK_SAMP_MARK'
+	| 'LINE_WITH_DIV_MARK'
 	| 'LINE_WITH_HEADING_MARK'
 	| 'LINE_WITH_LIST_ITEM_MARK'
 	| 'LINE_WITH_SEPARATOR_MARK'
@@ -54,6 +55,7 @@ export type BlockNodeType =
 	| 'BLOCK_SAMP'
 	| 'KEY'
 	| 'BUTTON'
+	| 'DIV'
 	| 'TABLE'
 	| 'TABLE_ROW'
 	| 'TABLE_CELL'
@@ -85,7 +87,8 @@ export type InlineTokenType =
 	| 'TD'
 	| 'TH'
 	| 'MATH'
-	| 'IMAGE';
+	| 'IMAGE'
+	| 'SPAN';
 
 export type InlineNodeType =
 	| 'TEXT'

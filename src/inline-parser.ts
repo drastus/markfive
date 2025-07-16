@@ -6,10 +6,12 @@ import type {
 	BlockNodeType, InlineNodeType, InlineToken, InlineTokenType, Node, Options,
 } from './types';
 
-const specialChars = /[#*[\]{}"'`:~^!|/_=$<>&-]/;
+const specialChars = /[#*[\]{}"'`:~^!|/_=$<>&?-]/;
 
 const commonTokens: Array<{chars: string, type: InlineTokenType, position?: 'start' | 'end'}> = [
+	// 3 chars
 	{chars: ']+[', type: 'KEY_JOINER'},
+	// 2 chars
 	{chars: '\'\'', type: 'CITE'},
 	{chars: '__', type: 'U'},
 	{chars: '--', type: 'S'},
@@ -17,6 +19,9 @@ const commonTokens: Array<{chars: string, type: InlineTokenType, position?: 'sta
 	{chars: ']]', type: 'KEY', position: 'end'},
 	{chars: '[|', type: 'BUTTON', position: 'start'},
 	{chars: '|]', type: 'BUTTON', position: 'end'},
+	{chars: '?[', type: 'SPAN', position: 'start'},
+	{chars: ']?', type: 'SPAN', position: 'end'},
+	// 1 char
 	{chars: '#', type: 'B'},
 	{chars: '/', type: 'I'},
 	{chars: '~', type: 'EM'},
@@ -37,7 +42,7 @@ const tableRowTokens: Array<{chars: string, type: InlineTokenType}> = [
 	{chars: '!', type: 'TH'},
 ];
 
-const selfNestableTokenTypes = ['B', 'I', 'EM', 'STRONG', 'MARK'];
+const selfNestableTokenTypes = ['B', 'I', 'EM', 'STRONG', 'MARK', 'SPAN'];
 
 class InlineParser {
 	ast: Node;
@@ -260,12 +265,16 @@ class InlineParser {
 					expectedNoteSubtype = undefined;
 					index = closeTokenIndex + 1;
 				} else if (closeTokenIndex !== undefined && tokens[closeTokenIndex]!.defaultAttribute) {
-					if (tokens[index - 1]!.type === 'IMAGE') {
+					if (tokens[index - 1]?.type === 'IMAGE') {
 						const innerTokens = tokens.slice(index + 1, closeTokenIndex);
 						if (innerTokens.length > 1) {
 							const newNode = new InlineNode('OBJECT', {
 								tokens: innerTokens,
-								attributes: {data: tokens[closeTokenIndex]!.defaultAttribute, ...parseAttributes(tokens[closeTokenIndex]!.attributes)},
+								attributes: {
+									data: tokens[closeTokenIndex]!.defaultAttribute,
+									role: 'img',
+									...parseAttributes(tokens[closeTokenIndex]!.attributes),
+								},
 							});
 							node.children.push(newNode);
 						} else {
@@ -287,7 +296,7 @@ class InlineParser {
 					}
 					index = closeTokenIndex + 1;
 				} else {
-					if (tokens[index - 1]!.type === 'IMAGE') {
+					if (tokens[index - 1]?.type === 'IMAGE') {
 						this.addTextNode(node.children, tokens[index - 1]!.text!);
 					}
 					this.addTextNode(node.children, token.text!);
@@ -315,11 +324,8 @@ class InlineParser {
 							tokens, (t) => t.type === token.type, startIndex,
 						);
 						if (newTokenIndex !== undefined) {
-							if (tokens[newTokenIndex]!.positions?.includes('end') && newTokenIndex > startIndex) {
+							if (tokens[newTokenIndex]!.positions?.includes('end') && newTokenIndex >= startIndex) {
 								closeTokenIndex = newTokenIndex;
-								if (tokens[newTokenIndex]!.attributes) {
-									attributes = parseAttributes(tokens[newTokenIndex]!.attributes);
-								}
 								depth -= 1;
 							} else {
 								depth += 1;
@@ -333,6 +339,9 @@ class InlineParser {
 					);
 				}
 				if (closeTokenIndex !== undefined) { // close token found
+					if (tokens[closeTokenIndex]!.attributes) {
+						attributes = parseAttributes(tokens[closeTokenIndex]!.attributes);
+					}
 					let newNode = new InlineNode(
 						token.type as InlineNodeType,
 						{tokens: tokens.slice(index + 1, closeTokenIndex), attributes},

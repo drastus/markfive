@@ -1,0 +1,17 @@
+??
+	This is a paragraph in a div.
+
+	This is another --paragraph--{.s1} in a div.
+
+	??{.div}
+		This is a paragraph in another div.
+
+		This is another paragraph in another div.
+
+Some other paragraph that has a text with ?[span]?{.span}.
+
+{.div}
+
+Here ?[external span includes ?[internal span]?{#spanint}]?{#spanext}.
+
+??{.one-liner} One-line div (not supported).

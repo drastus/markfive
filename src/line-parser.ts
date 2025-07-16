@@ -25,7 +25,7 @@ class LineParser {
 	tokens: LineToken[];
 	current: number;
 	indentStack: number[];
-	codeIndent: number;
+	preIndent: number;
 	ast: Node;
 	lastAttributes?: string;
 	options: Options;
@@ -34,7 +34,7 @@ class LineParser {
 		this.tokens = tokens;
 		this.current = 0;
 		this.indentStack = [];
-		this.codeIndent = 0;
+		this.preIndent = 0;
 		this.ast = new BlockNode('DOCUMENT');
 		this.options = options;
 	}
@@ -62,6 +62,8 @@ class LineParser {
 			return true;
 		} else if (this.prevToken().type === 'LINE_WITH_BLOCK_QUOTE_MARK' && !this.prevToken().text) {
 			return true;
+		} else if (this.prevToken().type === 'LINE_WITH_DIV_MARK' && !this.prevToken().text) {
+			return true;
 		} else if (this.prevToken().type === 'LINE_WITH_ATTRIBUTES') {
 			if (this.tokens[this.current - 2]!.type === 'EMPTY_LINE' || this.tokens[this.current - 2] === undefined) {
 				return true;
@@ -84,7 +86,7 @@ class LineParser {
 		if (indent < this.indentStack.at(-1)!) {
 			const newIndentStackEnd = (this.indentStack.findIndex((i) => i >= indent) ?? 0) + 1;
 			this.indentStack = this.indentStack.slice(0, newIndentStackEnd);
-			if (this.activeNode().type === 'BLOCK_QUOTE') {
+			if (this.activeNode().type === 'BLOCK_QUOTE' || this.activeNode().type === 'DIV') {
 				this.indentStack.pop();
 			}
 		}
@@ -108,17 +110,29 @@ class LineParser {
 	};
 
 	addTextNode = (token: LineToken) => {
-		let content = token.line!;
+		let content: string;
 		if (this.activeNode().type === 'BLOCK_CODE') {
-			if (this.codeIndent === 0) this.codeIndent = token.indent!;
-			content = trimIndent(content, this.codeIndent);
+			if (this.preIndent === 0) this.preIndent = token.indent!;
+			content = trimIndent(token.line!, this.preIndent);
+		} else {
+			content = token.line!.trim();
 		}
-		this.addNode(
-			new BlockNode('LINE', {content}),
-			token.indent,
-			{cantHaveChildLines: true},
-		);
-		// or new paragraph, if activeNode doesn't allow new text line
+
+		if (this.isOpenPosition()) {
+			this.addNode(
+				new BlockNode('PARAGRAPH', {
+					attributes: this.checkForAttributes(),
+					children: [new BlockNode('LINE', {content})],
+				}),
+				token.indent,
+			);
+		} else {
+			this.addNode(
+				new BlockNode('LINE', {content}),
+				token.indent,
+				{cantHaveChildLines: true},
+			);
+		}
 	};
 
 	parse = () => {
@@ -212,17 +226,7 @@ class LineParser {
 		}
 
 		if (token.type === 'TEXT_LINE') {
-			if (this.isOpenPosition()) { // include list items without any text and start of a blockquote
-				this.addNode(
-					new BlockNode('PARAGRAPH', {
-						attributes: this.checkForAttributes(),
-						children: [new BlockNode('LINE', {content: token.text})],
-					}),
-					token.indent,
-				);
-			} else {
-				this.addTextNode(token);
-			}
+			this.addTextNode(token);
 			return;
 		}
 
@@ -294,7 +298,7 @@ class LineParser {
 					}),
 					token.indent,
 				);
-				this.codeIndent = 0;
+				this.preIndent = 0;
 			} else { // single-line
 				this.addNode(
 					new BlockNode('BLOCK_CODE', {
@@ -344,6 +348,20 @@ class LineParser {
 				token.indent,
 				{cantHaveChildLines: true},
 			);
+			return;
+		}
+
+		if (token.type === 'LINE_WITH_DIV_MARK') {
+			if ((this.tokens[this.current + 1]?.indent ?? 0) > (token.indent ?? 0)) {
+				this.addNode(
+					new BlockNode('DIV', {
+						attributes: parseAttributes(token.attributes),
+					}),
+					token.indent,
+				);
+			} else {
+				this.addTextNode(token);
+			}
 			return;
 		}
 
