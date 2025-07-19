@@ -1,0 +1,7 @@
+{lang=fr}
+
+Ce document est rédigé en français.
+
+Il présente des guillemets: <<doubles>> et <simples>.
+
+Faut-il ajouter quelque chose? Probablement pas!

@@ -12,7 +12,7 @@
 |v| Blockquotes
 |v| Kbd and samp
 |v| Div and span
-|_| Internationalized typography
+|v| Internationalized typography
 |_| Description lists
 |_| Br and wbr
 |_| Escaping

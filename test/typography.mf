@@ -6,6 +6,9 @@ Here is a block code that contains quotes:
 
 ''No Life 'Til Leather'' was recorded on July 6, 1982.
 
+{lang=pl}
+Cytat po polsku: "Witaj, świecie!".
+
 Glitter, felt, yarn, and buttons---his kitchen looked as if a clown had exploded.
 A flock of sparrows---some of them juveniles---alighted and sang.
 

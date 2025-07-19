@@ -170,6 +170,8 @@ class LineParser {
 		if (token.type === 'LINE_WITH_ATTRIBUTES') {
 			if (!this.tokens[this.current + 1] || this.tokens[this.current + 1]!.type !== 'EMPTY_LINE') {
 				this.lastAttributes = token.attributes; // lastAttributes later taken as attrs or as a text node by addNewNode
+			} else if (this.current === 0 && this.tokens[this.current + 1]!.type === 'EMPTY_LINE') {
+				this.activeNode().attributes = parseAttributes(token.attributes);
 			} else {
 				this.addTextNode(token);
 			}
