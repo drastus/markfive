@@ -178,18 +178,24 @@ class Typography {
 					}
 				}
 			} else if (char === '\'') {
-				modifiedText += getSingleQuotes(lang)[1]; // closing
-				if (prevIsWhitespace || this.prevChar === '') {
-					this.openSingleQuotes.push({node, position: currentPosition});
+				if (text.slice(0, index + 1).match(/(?<![''])\d+'$/)) { // preceded by digits not preceded by an apostrophe
+					const nextIsApostrophe = text[index + 1] === '\'';
+					modifiedText += (nextIsApostrophe ? '″' : '′');
+					index += nextIsApostrophe ? 1 : 0;
 				} else {
-					if (this.openSingleQuotes.at(-1)) {
-						const {node: openingQuoteNode, position} = this.openSingleQuotes.at(-1)!;
-						if (openingQuoteNode === node) {
-							modifiedText = modifiedText.slice(0, position) + getSingleQuotes(lang)[0] + modifiedText.slice(position + 1);
-						} else {
-							openingQuoteNode.content = openingQuoteNode.content!.slice(0, position) + getSingleQuotes(lang)[0] + openingQuoteNode.content!.slice(position + 1);
+					modifiedText += getSingleQuotes(lang)[1]; // closing
+					if (prevIsWhitespace || this.prevChar === '') {
+						this.openSingleQuotes.push({node, position: currentPosition});
+					} else {
+						if (this.openSingleQuotes.at(-1)) {
+							const {node: openingQuoteNode, position} = this.openSingleQuotes.at(-1)!;
+							if (openingQuoteNode === node) {
+								modifiedText = modifiedText.slice(0, position) + getSingleQuotes(lang)[0] + modifiedText.slice(position + 1);
+							} else {
+								openingQuoteNode.content = openingQuoteNode.content!.slice(0, position) + getSingleQuotes(lang)[0] + openingQuoteNode.content!.slice(position + 1);
+							}
+							this.openSingleQuotes.pop();
 						}
-						this.openSingleQuotes.pop();
 					}
 				}
 			} else if (char === '.' && text[index + 1] === '.' && text[index + 2] === '.') {
@@ -225,6 +231,8 @@ class Typography {
 				modifiedText += ' !';
 			} else if (char === ':' && usesSpacing(lang) && !prevIsWhitespace) {
 				modifiedText += ' :';
+			} else if (char === 'x' && text.slice(0, index + 3).match(/\d x \d$/)) {
+				modifiedText += '×';
 			} else {
 				modifiedText += char;
 			}
