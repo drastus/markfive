@@ -1,13 +1,14 @@
 import BlockNode from './block-node';
 import {stringifyAttributes, trimAndJoin} from './helpers';
 import type InlineNode from './inline-node';
-import type {Node, Options} from './types';
+import type {BlockNodeType, Node, Options} from './types';
 
-const elementMappings: Record<string, string> = {
+const elementMappings: Partial<Record<BlockNodeType, string>> = {
 	PARAGRAPH: 'p',
 	ORDERED_LIST: 'ol',
 	UNORDERED_LIST: 'ul',
 	LIST_ITEM: 'li',
+	DESCRIPTION_LIST: 'dl',
 	TABLE_ROW: 'tr',
 	SEPARATOR: 'hr',
 	BLOCK_QUOTE: 'blockquote',
@@ -16,7 +17,7 @@ const tableCellElementMappings: Record<string, string> = {
 	'|': 'td',
 	'!': 'th',
 };
-const mainBlockElements = ['body', 'table', 'tr', 'ol', 'ul'];
+const mainBlockElements = ['body', 'table', 'tr', 'ol', 'ul', 'dl'];
 
 const notesListTypes = [
 	'decimal',
@@ -102,7 +103,7 @@ class Renderer {
 	};
 
 	renderNode = (node: Node) => {
-		let elementType;
+		let elementType: string | undefined;
 
 		if (node.type === 'DOCUMENT') {
 			let string = '';
@@ -116,6 +117,9 @@ class Renderer {
 		if (node.type === 'TABLE_CELL') elementType = tableCellElementMappings[node.subtype!]!;
 		if (node.type === 'TEXT') {
 			return this.escapeHtml(node.content!);
+		}
+		if (node.type === 'DESCRIPTION_LIST_ITEM') {
+			elementType = node.subtype === ':' ? 'dt' : 'dd';
 		}
 		if (node.type === 'LINE') {
 			let string = '';
@@ -204,7 +208,7 @@ class Renderer {
 			return `<a href="#${noteRef.id}" id="${noteRef.refId}" class="mf-note-ref">${cue}</a>`;
 		}
 
-		elementType ??= elementMappings[node.type] ?? node.type.toLowerCase();
+		elementType ??= elementMappings[node.type as BlockNodeType] ?? node.type.toLowerCase();
 		if (this.options.debug) console.log('renderNode', node.type, elementType, node.attributes ?? '');
 
 		this.newlineMode = 'br';

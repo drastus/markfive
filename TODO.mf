@@ -13,7 +13,7 @@
 |v| Kbd and samp
 |v| Div and span
 |v| Internationalized typography
-|_| Description lists
+|v| Description lists
 |_| Br and wbr
 |_| Escaping
 |_| Other HTML elements
@@ -23,6 +23,7 @@
 |_| Hgroups and multi-line headers
 |_| Templates
 |_| Config
+|_| No-break spaces in typography
 |_| Colspans and rowspans
 |_| Numeric table headers
 |_| Figures
@@ -36,4 +37,5 @@
 |_| Musical notation
 |_| Bibliography
 |_| Indices
+|_| Nestable description lists
 |_| Multi-line notes

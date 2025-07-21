@@ -9,6 +9,7 @@ const isNestingAllowed = (parentNodeType: BlockNodeType, nodeType: BlockNodeType
 		PARAGRAPH: ['LINE'],
 		ORDERED_LIST: ['LIST_ITEM'],
 		UNORDERED_LIST: ['LIST_ITEM'],
+		DESCRIPTION_LIST: ['DESCRIPTION_LIST_ITEM'],
 		TABLE: ['TABLE_ROW'],
 		TABLE_ROW: ['TABLE_CELL'],
 		BLOCK_CODE: ['LINE'],
@@ -80,13 +81,11 @@ class LineParser {
 		}
 	};
 
-	increasedIndent = (indent = 0) => indent > this.indentStack.at(-1)!;
-
 	adaptIndentStack = (indent = 0) => {
 		if (indent < this.indentStack.at(-1)!) {
 			const newIndentStackEnd = (this.indentStack.findIndex((i) => i >= indent) ?? 0) + 1;
 			this.indentStack = this.indentStack.slice(0, newIndentStackEnd);
-			if (this.activeNode().type === 'BLOCK_QUOTE' || this.activeNode().type === 'DIV') {
+			if (['BLOCK_QUOTE', 'DIV', 'DESCRIPTION_LIST'].includes(this.activeNode().type)) {
 				this.indentStack.pop();
 			}
 		}
@@ -234,14 +233,15 @@ class LineParser {
 
 		if (token.type === 'LINE_WITH_LIST_ITEM_MARK') {
 			const listType = token.marker === '-' ? 'UNORDERED_LIST' : 'ORDERED_LIST';
-			// add this.checkForAttributes()
-			if (this.increasedIndent(token.indent)) { // new subitem
-				this.addNode(new BlockNode(listType), token.indent);
+			if ((token.indent ?? 0) > this.indentStack.at(-1)!) { // new subitem
+				this.addNode(new BlockNode(listType, {attributes: this.checkForAttributes()}), token.indent);
+			} else if ((token.indent ?? 0) === this.indentStack.at(-1)! && this.prevToken().type === 'EMPTY_LINE') { // new list
+				this.addNode(new BlockNode(listType, {attributes: this.checkForAttributes()}), token.indent);
 			} else {
 				this.adaptIndentStack(token.indent);
 				if (!['ORDERED_LIST', 'UNORDERED_LIST'].includes(this.activeNode().type)) { // new list
 					this.addNode(
-						new BlockNode(listType),
+						new BlockNode(listType, {attributes: this.checkForAttributes()}),
 						token.indent,
 						{skipIndentAdapting: true},
 					);
@@ -261,6 +261,65 @@ class LineParser {
 				this.addNode(new BlockNode('LINE', {content: token.text}), token.indent, {cantHaveChildLines: true, skipIndentAdapting: true});
 			}
 			return;
+		}
+
+		if (token.type === 'LINE_WITH_DESCRIPTION_LIST_ITEM_MARK') {
+			this.adaptIndentStack(token.indent);
+			if (
+				this.activeNode().type !== 'DESCRIPTION_LIST'
+				|| ((token.indent ?? 0) === this.indentStack.at(-1)! && this.isOpenPosition())
+			) {
+				this.addNode(
+					new BlockNode('DESCRIPTION_LIST', {attributes: this.checkForAttributes()}),
+					token.indent,
+					{skipIndentAdapting: true},
+				);
+			}
+			this.addNode(
+				new BlockNode('DESCRIPTION_LIST_ITEM', {
+					subtype: token.marker,
+					content: token.text,
+					attributes: parseAttributes(token.attributes),
+				}),
+				token.indent,
+				{cantHaveChildLines: true, skipIndentAdapting: true},
+			);
+		}
+
+		if (token.type === 'LINE_WITH_FINAL_COLON') {
+			if (this.tokens[this.current + 1]
+				&& (this.tokens[this.current + 1]!.indent ?? 0) > (token.indent ?? 0)
+				&& !['BLOCK_CODE', 'BLOCK_KBD', 'BLOCK_SAMP'].includes(this.activeNode().type)
+			) {
+				if (
+					this.activeNode().type !== 'DESCRIPTION_LIST'
+					|| ((token.indent ?? 0) === this.indentStack.at(-1)! && this.isOpenPosition())
+				) {
+					this.addNode(
+						new BlockNode('DESCRIPTION_LIST', {attributes: this.checkForAttributes()}),
+						token.indent,
+					);
+				}
+				this.addNode(
+					new BlockNode('DESCRIPTION_LIST_ITEM', {
+						subtype: ':',
+						content: token.text,
+					}),
+					token.indent,
+					{cantHaveChildLines: true},
+				);
+				this.addNode(
+					new BlockNode('DESCRIPTION_LIST_ITEM', {
+						subtype: '=',
+						content: this.tokens[this.current + 1]!.text,
+					}),
+					token.indent,
+					{cantHaveChildLines: true},
+				);
+				this.current++;
+			} else {
+				this.addTextNode(token);
+			}
 		}
 
 		if (token.type === 'LINE_WITH_BLOCK_QUOTE_MARK') {

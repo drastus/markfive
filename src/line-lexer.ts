@@ -80,6 +80,18 @@ class LineLexer {
 			return;
 		}
 
+		if (match = line.match(`^([ \t]*)(:|=)${attributesRegexString}(?: (.+))?$`)) {
+			this.tokens.push({
+				type: 'LINE_WITH_DESCRIPTION_LIST_ITEM_MARK',
+				line,
+				indent: calculateIndent(match[1]),
+				marker: match[2],
+				attributes: match[3],
+				text: match[4],
+			});
+			return;
+		}
+
 		if (match = line.match(`^([ \t]*)""${attributesRegexString}(?: (.+))?$`)) {
 			this.tokens.push({
 				type: 'LINE_WITH_BLOCK_QUOTE_MARK',
@@ -178,6 +190,15 @@ class LineLexer {
 			return;
 		}
 
+		if (match = line.match(/^([ \t]*)(.+:)$/)) {
+			this.tokens.push({
+				type: 'LINE_WITH_FINAL_COLON',
+				line,
+				indent: calculateIndent(match[1]),
+				text: match[2],
+			});
+			return;
+		}
 		this.tokens.push({
 			type: 'TEXT_LINE',
 			line,

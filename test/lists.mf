@@ -7,6 +7,7 @@ Simple:
 Nested:
 - First item
 - Second item that has nested list:
+	{.nlist}
 	- First nested item
 	- Second nested item
 		- First nested nested item
@@ -18,3 +19,19 @@ Here is a paragraph after the list.
 1. Item 1
 2. Item 2
 4. Item 4
+
+1. Other list item
+2. Other list item
+
+: :Apartment:, n.
+	= An execution context grouping one or more threads with one or more COM objects.
+: :Flat:, n.
+	= A deflated tire.
+
+{.colonlist}
+Fuzzy logic:
+	gradual transition between "perfect falsity" and "perfect truth"
+Supervaluationism:
+	allows one to apply the tautologies of propositional logic in cases where truth values are undefined
+Subvaluationism:
+	logical dual of supervaluationism
