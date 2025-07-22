@@ -14,13 +14,14 @@
 |v| Div and span
 |v| Internationalized typography
 |v| Description lists
-|_| Br and wbr
+|v| Br and wbr
 |_| Escaping
 |_| Other HTML elements
 |_| Intra-word elements
 |_| Comments
 |_| Enhanced ordered lists
 |_| Hgroups and multi-line headers
+|_| Code highlighting
 |_| Templates
 |_| Config
 |_| No-break spaces in typography

@@ -223,7 +223,7 @@ class Renderer {
 			if (node instanceof BlockNode) string += '\n';
 			return string;
 		} else {
-			return `<${elementType}${stringifyAttributes(node.attributes)}/>\n`;
+			return `<${elementType}${stringifyAttributes(node.attributes)}>\n`;
 		}
 	};
 

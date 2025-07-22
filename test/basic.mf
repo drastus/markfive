@@ -57,8 +57,8 @@ More complicated list:
 3. Item 3
 
 
-Chapter 3: Tables
-=================
+Chapter 3{/}Tables
+==================
 
 Simple table
 ------------

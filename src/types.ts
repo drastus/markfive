@@ -92,7 +92,9 @@ export type InlineTokenType =
 	| 'TH'
 	| 'MATH'
 	| 'IMAGE'
-	| 'SPAN';
+	| 'SPAN'
+	| 'BR'
+	| 'WBR';
 
 export type InlineNodeType =
 	| 'TEXT'
@@ -119,7 +121,9 @@ export type InlineNodeType =
 	| 'INLINE_MATH'
 	| 'NOTE'
 	| 'IMG'
-	| 'OBJECT';
+	| 'OBJECT'
+	| 'BR'
+	| 'WBR';
 
 export type InlineToken = {
 	type: InlineTokenType,

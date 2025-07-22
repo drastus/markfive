@@ -9,7 +9,10 @@ import type {
 const specialChars = /[#*[\]{}"'`:~^!|/_=$<>&?-]/;
 
 const commonTokens: Array<{chars: string, type: InlineTokenType, position?: 'start' | 'end'}> = [
+	// 4 chars
+	{chars: '{/?}', type: 'WBR'},
 	// 3 chars
+	{chars: '{/}', type: 'BR'},
 	{chars: ']+[', type: 'KEY_JOINER'},
 	// 2 chars
 	{chars: '\'\'', type: 'CITE'},
@@ -110,13 +113,7 @@ class InlineParser {
 			}
 
 			for (let {chars, type, position} of availableTokens) {
-				if (content[index + nextSpecialCharIndex] === chars[0]) {
-					if (chars.length === 2 && content[index + nextSpecialCharIndex + 1] !== chars[1]) {
-						continue;
-					}
-					if (chars.length === 3 && content[index + nextSpecialCharIndex + 1] !== chars[1] && content[index + nextSpecialCharIndex + 2] !== chars[2]) {
-						continue;
-					}
+				if (content.slice(index + nextSpecialCharIndex, index + nextSpecialCharIndex + chars.length) === chars) {
 					if (type === 'IMAGE' && content[index + nextSpecialCharIndex + 1] !== '[') {
 						continue;
 					}
@@ -130,7 +127,7 @@ class InlineParser {
 					const prevIsWhitespace = /^(\p{Z})/u.test(content[index + nextSpecialCharIndex - 1] ?? '');
 					const nextIsWhitespace = /^(\p{Z})/u.test(content[index + nextSpecialCharIndex + consumedChars] ?? '');
 					if (
-						(prevIsAlphanumeric && nextIsAlphanumeric && !['SUP', 'SUB', 'KEY_JOINER', 'BUTTON_SEPARATOR'].includes(type))
+						(prevIsAlphanumeric && nextIsAlphanumeric && !['SUP', 'SUB', 'KEY_JOINER', 'BUTTON_SEPARATOR', 'BR', 'WBR'].includes(type))
 						|| (prevIsWhitespace && nextIsWhitespace && !['TD', 'TH'].includes(type))
 						|| ((prevIsAlphanumeric || nextIsAlphanumeric) && type === 'TH')
 					) {
@@ -237,7 +234,10 @@ class InlineParser {
 				index++;
 				continue;
 			}
-			if (token.type === 'BRACKET_OPEN') {
+			if (['BR', 'WBR'].includes(token.type)) {
+				node.children.push(new InlineNode(token.type as 'BR' | 'WBR'));
+				index++;
+			} else if (token.type === 'BRACKET_OPEN') {
 				const closeTokenIndex = findIndexInRange<InlineToken>(
 					tokens, (t) => t.type === 'BRACKET_CLOSE', index + 1,
 				);
