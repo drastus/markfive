@@ -15,9 +15,9 @@
 |v| Internationalized typography
 |v| Description lists
 |v| Br and wbr
-|_| Escaping
-|_| Other HTML elements
+|v| Escaping
 |_| Intra-word elements
+|_| Other HTML elements
 |_| Comments
 |_| Enhanced ordered lists
 |_| Hgroups and multi-line headers

@@ -1,0 +1,23 @@
+Escaped header
+\=============
+
+\{lang=en}
+Paragraph.
+
+\* * *
+
+\- List item?
+\- Nooo
+
+\: Term?
+	\= Definition?
+
+Some \/escaped/ word.
+
+Some \`escaped\` word.
+
+Some not \\`escaped\\` word.
+
+Some escaped \&[image](image.png).
+
+Link escaped &\[image](image.png) too.

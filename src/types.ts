@@ -67,8 +67,7 @@ export type BlockNodeType =
 
 export type InlineTokenType =
 	| 'TEXT'
-	| 'BRACKET_OPEN'
-	| 'BRACKET_CLOSE'
+	| 'BRACKET'
 	| 'EM'
 	| 'STRONG'
 	| 'MARK'

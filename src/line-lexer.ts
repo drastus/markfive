@@ -1,6 +1,8 @@
 import {attributesRegexString, calculateIndent} from './helpers';
 import {type Options, type LineToken} from './types';
 
+const escape = '(\\\\)?';
+
 class LineLexer {
 	lines: string[];
 	tokens: LineToken[];
@@ -35,14 +37,18 @@ class LineLexer {
 			return;
 		}
 
-		if (line.match(/^\* \* \*$/)) {
-			this.tokens.push({type: 'LINE_WITH_SEPARATOR_MARK', line});
+		if (match = line.match(`^[\t ]*${escape}\\* \\* \\*$`)) {
+			if (!match[1]) {
+				this.tokens.push({type: 'LINE_WITH_SEPARATOR_MARK', line});
+			} else {
+				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[1] ? 1 : 0)});
+			}
 			return;
 		}
 
 		for (const [index, char] of ['\\*', '=', '-', '\\.'].entries()) {
-			if (line.match(`^${char}{3,}$`)) {
-				if ((this.lines[this.current - 1] ?? '').length > 0) {
+			if (match = line.match(`^${escape}${char}{3,}$`)) {
+				if ((this.lines[this.current - 1] ?? '').length > 0 && !match[1]) {
 					this.tokens.pop();
 					this.tokens.push({
 						type: 'LINE_WITH_HEADING_MARK',
@@ -52,141 +58,189 @@ class LineLexer {
 						text: this.lines[this.current - 1]!.trimStart(),
 					});
 				} else {
-					this.tokens.push({type: 'TEXT_LINE', text: line});
+					this.tokens.push({type: 'TEXT_LINE', line: line.slice(match[1] ? 1 : 0)});
 				}
 				return;
 			}
 		}
 
-		if (match = line.match(`^([ \t]*)${attributesRegexString}$`)) {
-			this.tokens.push({
-				type: 'LINE_WITH_ATTRIBUTES',
-				line,
-				indent: calculateIndent(match[1]),
-				attributes: match[2],
-			});
+		if (match = line.match(`^([ \t]*)${escape}${attributesRegexString}$`)) {
+			if (!match[2]) {
+				this.tokens.push({
+					type: 'LINE_WITH_ATTRIBUTES',
+					line,
+					indent: calculateIndent(match[1]),
+					attributes: match[3],
+				});
+			} else {
+				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+			}
 			return;
 		}
 
-		if (match = line.match(`^([ \t]*)(-|\\d+\\.)${attributesRegexString}(?: (.+))?$`)) {
-			this.tokens.push({
-				type: 'LINE_WITH_LIST_ITEM_MARK',
-				line,
-				indent: calculateIndent(match[1]),
-				marker: match[2],
-				attributes: match[3],
-				text: match[4],
-			});
+		if (match = line.match(`^([ \t]*)${escape}(-|\\d+\\.)${attributesRegexString}(?: (.+))?$`)) {
+			if (!match[2]) {
+				this.tokens.push({
+					type: 'LINE_WITH_LIST_ITEM_MARK',
+					line,
+					indent: calculateIndent(match[1]),
+					marker: match[3],
+					attributes: match[4],
+					text: match[5],
+				});
+			} else {
+				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+			}
 			return;
 		}
 
-		if (match = line.match(`^([ \t]*)(:|=)${attributesRegexString}(?: (.+))?$`)) {
-			this.tokens.push({
-				type: 'LINE_WITH_DESCRIPTION_LIST_ITEM_MARK',
-				line,
-				indent: calculateIndent(match[1]),
-				marker: match[2],
-				attributes: match[3],
-				text: match[4],
-			});
+		if (match = line.match(`^([ \t]*)${escape}(:|=)${attributesRegexString}(?: (.+))?$`)) {
+			if (!match[2]) {
+				this.tokens.push({
+					type: 'LINE_WITH_DESCRIPTION_LIST_ITEM_MARK',
+					line,
+					indent: calculateIndent(match[1]),
+					marker: match[3],
+					attributes: match[4],
+					text: match[5],
+				});
+			} else {
+				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+			}
 			return;
 		}
 
-		if (match = line.match(`^([ \t]*)""${attributesRegexString}(?: (.+))?$`)) {
-			this.tokens.push({
-				type: 'LINE_WITH_BLOCK_QUOTE_MARK',
-				line,
-				indent: calculateIndent(match[1]),
-				attributes: match[2],
-				text: match[3],
-			});
+		if (match = line.match(`^([ \t]*)${escape}""${attributesRegexString}(?: (.+))?$`)) {
+			if (!match[2]) {
+				this.tokens.push({
+					type: 'LINE_WITH_BLOCK_QUOTE_MARK',
+					line,
+					indent: calculateIndent(match[1]),
+					attributes: match[3],
+					text: match[4],
+				});
+			} else {
+				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+			}
 			return;
 		}
 
-		if (match = line.match(`^([ \t]*)\`\`${attributesRegexString}(?: (.+))?$`)) {
-			this.tokens.push({
-				type: 'LINE_WITH_BLOCK_CODE_MARK',
-				line,
-				indent: calculateIndent(match[1]),
-				attributes: match[2],
-				text: match[3],
-			});
+		if (match = line.match(`^([ \t]*)${escape}\`\`${attributesRegexString}(?: (.+))?$`)) {
+			if (!match[2]) {
+				this.tokens.push({
+					type: 'LINE_WITH_BLOCK_CODE_MARK',
+					line,
+					indent: calculateIndent(match[1]),
+					attributes: match[3],
+					text: match[4],
+				});
+			} else {
+				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+			}
 			return;
 		}
 
-		if (match = line.match(`^([ \t]*)>${attributesRegexString}(?: (.+))?$`)) {
-			this.tokens.push({
-				type: 'LINE_WITH_BLOCK_KBD_MARK',
-				line,
-				indent: calculateIndent(match[1]),
-				attributes: match[2],
-				text: match[3],
-			});
+		if (match = line.match(`^([ \t]*)${escape}>${attributesRegexString}(?: (.+))?$`)) {
+			if (!match[2]) {
+				this.tokens.push({
+					type: 'LINE_WITH_BLOCK_KBD_MARK',
+					line,
+					indent: calculateIndent(match[1]),
+					attributes: match[3],
+					text: match[4],
+				});
+			} else {
+				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+			}
 			return;
 		}
 
-		if (match = line.match(`^([ \t]*)<${attributesRegexString}(?: (.+))?$`)) {
-			this.tokens.push({
-				type: 'LINE_WITH_BLOCK_SAMP_MARK',
-				line,
-				indent: calculateIndent(match[1]),
-				attributes: match[2],
-				text: match[3],
-			});
+		if (match = line.match(`^([ \t]*)${escape}<${attributesRegexString}(?: (.+))?$`)) {
+			if (!match[2]) {
+				this.tokens.push({
+					type: 'LINE_WITH_BLOCK_SAMP_MARK',
+					line,
+					indent: calculateIndent(match[1]),
+					attributes: match[3],
+					text: match[4],
+				});
+			} else {
+				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+			}
 			return;
 		}
 
-		if (match = line.match(`^([ \t]*)\\?\\?${attributesRegexString}(?: (.+))?$`)) {
-			this.tokens.push({
-				type: 'LINE_WITH_DIV_MARK',
-				line,
-				indent: calculateIndent(match[1]),
-				attributes: match[2],
-				text: match[3],
-			});
+		if (match = line.match(`^([ \t]*)${escape}\\?\\?${attributesRegexString}(?: (.+))?$`)) {
+			if (!match[2]) {
+				this.tokens.push({
+					type: 'LINE_WITH_DIV_MARK',
+					line,
+					indent: calculateIndent(match[1]),
+					attributes: match[3],
+					text: match[4],
+				});
+			} else {
+				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+			}
 			return;
 		}
 
-		if (match = line.match(`^([ \t]*)\\|${attributesRegexString}(\\||!)(?: (.+))?$`)) {
-			this.tokens.push({
-				type: 'LINE_WITH_TABLE_ROW_MARK',
-				line,
-				indent: calculateIndent(match[1]),
-				attributes: match[2],
-				text: match[3] + ' ' + match[4],
-			});
+		if (match = line.match(`^([ \t]*)${escape}\\|${attributesRegexString}(\\||!)(?: (.+))?$`)) {
+			if (!match[2]) {
+				this.tokens.push({
+					type: 'LINE_WITH_TABLE_ROW_MARK',
+					line,
+					indent: calculateIndent(match[1]),
+					attributes: match[3],
+					text: match[4] + ' ' + match[5],
+				});
+			} else {
+				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+			}
 			return;
 		}
 
-		if (match = line.match(`^([ \t]*)\\|-${attributesRegexString}`)) {
-			this.tokens.push({
-				type: 'LINE_WITH_TABLE_ROW_SEPARATOR_MARK',
-				line,
-				indent: calculateIndent(match[1]),
-				attributes: match[2],
-			});
+		if (match = line.match(`^([ \t]*)${escape}\\|-${attributesRegexString}`)) {
+			if (!match[2]) {
+				this.tokens.push({
+					type: 'LINE_WITH_TABLE_ROW_SEPARATOR_MARK',
+					line,
+					indent: calculateIndent(match[1]),
+					attributes: match[3],
+				});
+			} else {
+				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+			}
 			return;
 		}
 
-		if (match = line.match(`^([ \t]*)(\\||!)${attributesRegexString}(?: (.+))?$`)) {
-			this.tokens.push({
-				type: 'LINE_WITH_TABLE_CELL_MARK',
-				line,
-				indent: calculateIndent(match[1]),
-				marker: match[2],
-				attributes: match[3],
-				text: match[4],
-			});
+		if (match = line.match(`^([ \t]*)${escape}(\\||!)${attributesRegexString}(?: (.+))?$`)) {
+			if (!match[2]) {
+				this.tokens.push({
+					type: 'LINE_WITH_TABLE_CELL_MARK',
+					line,
+					indent: calculateIndent(match[1]),
+					marker: match[3],
+					attributes: match[4],
+					text: match[5],
+				});
+			} else {
+				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+			}
 			return;
 		}
 
-		if (match = line.match('^([ \t]*)(\\$\\$)(.+?)(\\$\\$)?$')) {
-			this.tokens.push({
-				type: 'LINE_WITH_MATH_MARK',
-				line,
-				indent: calculateIndent(match[1]),
-				text: match[3],
-			});
+		if (match = line.match(`^([ \t]*)${escape}\\$\\$(.+?)(\\$\\$)?$`)) {
+			if (!match[2]) {
+				this.tokens.push({
+					type: 'LINE_WITH_MATH_MARK',
+					line,
+					indent: calculateIndent(match[1]),
+					text: match[3],
+				});
+			} else {
+				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+			}
 			return;
 		}
 
