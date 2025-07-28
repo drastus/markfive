@@ -164,6 +164,12 @@ class InlineParser {
 						if (!nextIsAlphanumeric && !prevIsWhitespace && position !== 'start') {
 							positions.push('end');
 						}
+						if (content[index + nextSpecialCharIndex + consumedChars] === '[') {
+							positions.push('start');
+						}
+						if (content[index + nextSpecialCharIndex - 1] === ']') {
+							positions.push('end');
+						}
 						if (['SUB', 'SUP'].includes(type)) {
 							if (!prevIsWhitespace) {
 								positions.push('start');
@@ -348,6 +354,10 @@ class InlineParser {
 						token.type as InlineNodeType,
 						{tokens: tokens.slice(index + 1, closeTokenIndex), attributes},
 					);
+					if (tokens[index + 1]?.type === 'BRACKET' && tokens[index + 1]!.positions?.includes('start')
+						&& tokens[closeTokenIndex - 1]?.type === 'BRACKET' && tokens[closeTokenIndex - 1]!.positions?.includes('end')) {
+						newNode.tokens = tokens.slice(index + 2, closeTokenIndex - 1);
+					}
 					if (token.type === 'KEY') {
 						const joinerIndices = findIndicesInRange<InlineToken>(
 							tokens, (t) => t.type === 'KEY_JOINER', index + 1, closeTokenIndex,

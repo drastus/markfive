@@ -16,7 +16,7 @@
 |v| Description lists
 |v| Br and wbr
 |v| Escaping
-|_| Intra-word elements
+|v| Intra-word elements
 |_| Other HTML elements
 |_| Comments
 |_| Enhanced ordered lists
