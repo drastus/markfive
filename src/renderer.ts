@@ -187,6 +187,22 @@ class Renderer {
 			this.isMathUsed = true;
 			return node.content ?? '';
 		}
+		if (node.type === 'BLOCK_OTHER') {
+			this.newlineMode = node.subtype === 'pre' ? 'n' : 'br';
+			this.newlineRequired = false;
+			let string = `<${node.subtype}${stringifyAttributes(node.attributes)}>`;
+			node.children.forEach((child: Node) => {
+				string += this.renderNode(child);
+			});
+			return `${string}</${node.subtype}>\n`;
+		}
+		if (node.type === 'INLINE_OTHER') {
+			let string = `<${node.subtype}${stringifyAttributes(node.attributes)}>`;
+			node.children.forEach((child: Node) => {
+				string += this.renderNode(child);
+			});
+			return `${string}</${node.subtype}>`;
+		}
 		if (node.type === 'NOTE') {
 			const refCount = (this.noteRefs[node.subtype!]?.length ?? 0) + 1;
 			const count = node.id

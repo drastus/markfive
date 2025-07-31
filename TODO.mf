@@ -17,7 +17,7 @@
 |v| Br and wbr
 |v| Escaping
 |v| Intra-word elements
-|_| Other HTML elements
+|v| Other HTML elements
 |_| Comments
 |_| Enhanced ordered lists
 |_| Hgroups and multi-line headers
@@ -31,6 +31,7 @@
 |_| Metadata variables
 |_| Additional entities
 |_| Emojis
+|_| Ruby
 |_| Small
 |_| Edits
 |_| Abbreviations

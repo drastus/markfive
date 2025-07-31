@@ -1,12 +1,12 @@
 import type BlockNode from './block-node';
-import {attributesRegexString, findIndexInRange, findIndicesInRange, parseAttributes} from './helpers';
+import {attributesRegexString, defaultAttributeRegexString, findCloseBracketIndexInRange, findIndexInRange, findIndicesInRange, parseAttributes} from './helpers';
 import InlineNode from './inline-node';
 import {markfiveMathToMathML} from './math-parser';
 import type {
 	BlockNodeType, InlineNodeType, InlineToken, InlineTokenType, Node, Options,
 } from './types';
 
-const specialChars = /[#*[\]{}"'`:~^!|/_=$<>&?-]/;
+const specialChars = /[#*[\]{}"'`:~^!|/_=$<>&?@-]/;
 
 const commonTokens: Array<{chars: string, type: InlineTokenType, position?: 'start' | 'end'}> = [
 	// 4 chars
@@ -38,6 +38,7 @@ const commonTokens: Array<{chars: string, type: InlineTokenType, position?: 'sta
 	{chars: '>', type: 'KBD'},
 	{chars: '<', type: 'SAMP'},
 	{chars: '&', type: 'IMAGE'},
+	{chars: '@', type: 'INLINE_OTHER'},
 	{chars: '[', type: 'BRACKET', position: 'start'},
 	{chars: ']', type: 'BRACKET', position: 'end'},
 	{chars: '|', type: 'BUTTON_SEPARATOR'}, // should be last
@@ -47,7 +48,8 @@ const tableRowTokens: Array<{chars: string, type: InlineTokenType}> = [
 	{chars: '!', type: 'TH'},
 ];
 
-const selfNestableTokenTypes = ['B', 'I', 'EM', 'STRONG', 'MARK', 'SPAN'];
+const selfNestableTokenTypes = ['EM', 'STRONG', 'MARK', 'SPAN'];
+const inlineOtherElements = ['abbr', 'bdi', 'data', 'del', 'ins', 'rt', 'ruby', 'small', 'time'];
 
 class InlineParser {
 	ast: Node;
@@ -105,53 +107,53 @@ class InlineParser {
 
 		while (index < content.length) {
 			const nextSpecialCharIndex = content.slice(index).search(specialChars);
-			let consumedChars = 0;
-			let match: RegExpMatchArray | null = null;
-
 			if (nextSpecialCharIndex < 0) {
 				this.addTextToken(tokens, content.slice(index));
 				index = content.length;
 				break;
 			}
+			const startIndex = index + nextSpecialCharIndex;
+			let consumedChars = 0;
+			let match: RegExpMatchArray | null = null;
 
 			for (let {chars, type, position} of availableTokens) {
-				if (content.slice(index + nextSpecialCharIndex, index + nextSpecialCharIndex + chars.length) === chars) {
-					if (type === 'IMAGE' && content[index + nextSpecialCharIndex + 1] !== '[') {
+				if (content.slice(startIndex, startIndex + chars.length) === chars) {
+					if (type === 'IMAGE' && content[startIndex + 1] !== '[') {
+						continue;
+					}
+					if (type === 'INLINE_OTHER' && !inlineOtherElements.some((e) => `${e}[` === content.slice(startIndex + 1, startIndex + e.length + 2))) {
 						continue;
 					}
 
 					consumedChars = chars.length;
 
 					let backslashesSequenceLength = 0;
-					while (content[index + nextSpecialCharIndex - 1 - backslashesSequenceLength] === '\\') {
+					while (content[startIndex - 1 - backslashesSequenceLength] === '\\') {
 						backslashesSequenceLength++;
 					}
 					if (backslashesSequenceLength % 2 === 1) {
 						this.addTextToken(
 							tokens,
-							content.slice(index, index + nextSpecialCharIndex - 1 - Math.floor(backslashesSequenceLength / 2))
-								+ content.slice(index + nextSpecialCharIndex, index + nextSpecialCharIndex + chars.length),
+							content.slice(index, startIndex - 1 - Math.floor(backslashesSequenceLength / 2))
+								+ content.slice(startIndex, startIndex + chars.length),
 						);
 						break;
 					} else if (backslashesSequenceLength > 0) {
-						this.addTextToken(tokens, content.slice(index, index + nextSpecialCharIndex - Math.floor(backslashesSequenceLength / 2)));
+						this.addTextToken(tokens, content.slice(index, startIndex - Math.floor(backslashesSequenceLength / 2)));
 					} else if (nextSpecialCharIndex > 0) {
-						this.addTextToken(tokens, content.slice(index, index + nextSpecialCharIndex));
+						this.addTextToken(tokens, content.slice(index, startIndex));
 					}
 
-					const prevIsAlphanumeric = /^(\p{L}|\p{M}|\p{N})/u.test(content[index + nextSpecialCharIndex - 1] ?? '');
-					const nextIsAlphanumeric = /^(\p{L}|\p{M}|\p{N})/u.test(content[index + nextSpecialCharIndex + consumedChars] ?? '');
-					const prevIsWhitespace = /^(\p{Z})/u.test(content[index + nextSpecialCharIndex - 1] ?? '');
-					const nextIsWhitespace = /^(\p{Z})/u.test(content[index + nextSpecialCharIndex + consumedChars] ?? '');
+					const prevIsAlphanumeric = /^(\p{L}|\p{M}|\p{N})/u.test(content[startIndex - 1] ?? '');
+					const nextIsAlphanumeric = /^(\p{L}|\p{M}|\p{N})/u.test(content[startIndex + consumedChars] ?? '');
+					const prevIsWhitespace = /^(\p{Z})/u.test(content[startIndex - 1] ?? '');
+					const nextIsWhitespace = /^(\p{Z})/u.test(content[startIndex + consumedChars] ?? '');
 					if (
 						(prevIsAlphanumeric && nextIsAlphanumeric && !['SUP', 'SUB', 'KEY_JOINER', 'BUTTON_SEPARATOR', 'BR', 'WBR', 'BRACKET'].includes(type))
 						|| (prevIsWhitespace && nextIsWhitespace && !['TD', 'TH'].includes(type))
 						|| ((prevIsAlphanumeric || nextIsAlphanumeric) && type === 'TH')
 					) {
-						this.addTextToken(tokens, content.slice(
-							index + nextSpecialCharIndex,
-							index + nextSpecialCharIndex + consumedChars,
-						));
+						this.addTextToken(tokens, content.slice(startIndex, startIndex + consumedChars));
 					} else {
 						if (type === 'TD' && (prevIsAlphanumeric || nextIsAlphanumeric)) {
 							type = 'BUTTON_SEPARATOR';
@@ -164,10 +166,10 @@ class InlineParser {
 						if (!nextIsAlphanumeric && !prevIsWhitespace && position !== 'start') {
 							positions.push('end');
 						}
-						if (content[index + nextSpecialCharIndex + consumedChars] === '[') {
+						if (content[startIndex + consumedChars] === '[') {
 							positions.push('start');
 						}
-						if (content[index + nextSpecialCharIndex - 1] === ']') {
+						if (content[startIndex - 1] === ']') {
 							positions.push('end');
 						}
 						if (['SUB', 'SUP'].includes(type)) {
@@ -184,9 +186,9 @@ class InlineParser {
 						const newToken: InlineToken = {
 							type,
 							positions,
-							text: content.slice(index + nextSpecialCharIndex, index + nextSpecialCharIndex + consumedChars),
+							text: content.slice(startIndex, startIndex + consumedChars),
 						};
-						const contentRest = content.slice(index + nextSpecialCharIndex + consumedChars);
+						const contentRest = content.slice(startIndex + consumedChars);
 						if (!positions.includes('start')) {
 							match = contentRest.match(`^${attributesRegexString}`);
 							if (match?.[1]) {
@@ -194,12 +196,12 @@ class InlineParser {
 								consumedChars += match[0].length;
 							}
 						}
-						if (type === 'BRACKET' && position === 'end') {
-							match = contentRest.match(`^(\\(([^()]*(\\([^()]+\\))?[^()]*)\\))?(${attributesRegexString})?`);
+						if (['BRACKET', 'DFN'].includes(type) && positions.includes('end')) {
+							match = contentRest.match(`^(${defaultAttributeRegexString})?(${attributesRegexString})?`);
 							if (match?.[2] || match?.[4]) {
 								newToken.defaultAttribute = match[2];
 								newToken.attributes = match[4];
-								newToken.text = ']' + match[0];
+								newToken.text += match[0];
 								consumedChars = 1 + match[0].length;
 							}
 						}
@@ -210,11 +212,11 @@ class InlineParser {
 				}
 			}
 			if (consumedChars === 0) {
-				this.addTextToken(tokens, content.slice(index, index + nextSpecialCharIndex + 1));
+				this.addTextToken(tokens, content.slice(index, startIndex + 1));
 				consumedChars = 1;
 			}
 
-			index = index + nextSpecialCharIndex + consumedChars;
+			index = startIndex + consumedChars;
 		}
 
 		return tokens;
@@ -246,9 +248,7 @@ class InlineParser {
 				node.children.push(new InlineNode(token.type as 'BR' | 'WBR'));
 				index++;
 			} else if (token.type === 'BRACKET' && token.positions?.includes('start')) {
-				const closeTokenIndex = findIndexInRange<InlineToken>(
-					tokens, (t) => t.type === 'BRACKET' && t.positions?.includes('end'), index + 1,
-				);
+				const closeTokenIndex = findCloseBracketIndexInRange(tokens, index + 1);
 				if (closeTokenIndex !== undefined
 					&& tokens.slice(index + 1, closeTokenIndex).every((t) => t.text === '*')
 					&& !expectedNoteSubtype
@@ -271,6 +271,22 @@ class InlineParser {
 					});
 					node.children.push(newNode);
 					expectedNoteSubtype = undefined;
+					index = closeTokenIndex + 1;
+				} else if (closeTokenIndex !== undefined && tokens[index - 2]?.type === 'INLINE_OTHER' && inlineOtherElements.includes(tokens[index - 1]?.text ?? '')) {
+					const subtype = tokens[index - 1]!.text!;
+					let defaultAttributes = {};
+					if (tokens[closeTokenIndex]!.defaultAttribute) {
+						if (subtype === 'bdo') defaultAttributes = {dir: tokens[closeTokenIndex]!.defaultAttribute};
+						else if (subtype === 'data') defaultAttributes = {value: tokens[closeTokenIndex]!.defaultAttribute};
+						else if (subtype === 'time') defaultAttributes = {datetime: tokens[closeTokenIndex]!.defaultAttribute};
+					}
+					const newNode = new InlineNode('INLINE_OTHER', {
+						subtype,
+						tokens: tokens.slice(index + 1, closeTokenIndex),
+						attributes: {...defaultAttributes, ...parseAttributes(tokens[closeTokenIndex]!.attributes)},
+					});
+					if (node.children.at(-1)) node.children.at(-1)!.content = node.children.at(-1)!.content!.slice(0, -subtype.length - 1);
+					node.children.push(newNode);
 					index = closeTokenIndex + 1;
 				} else if (closeTokenIndex !== undefined && tokens[closeTokenIndex]!.defaultAttribute) {
 					if (tokens[index - 1]?.type === 'IMAGE') {
@@ -349,6 +365,12 @@ class InlineParser {
 				if (closeTokenIndex !== undefined && closeTokenIndex - index > 1) { // close token found
 					if (tokens[closeTokenIndex]!.attributes) {
 						attributes = parseAttributes(tokens[closeTokenIndex]!.attributes);
+					}
+					if (token.type === 'DFN' && tokens[closeTokenIndex]!.defaultAttribute) {
+						attributes = {
+							title: tokens[closeTokenIndex]!.defaultAttribute!,
+							...attributes,
+						};
 					}
 					let newNode = new InlineNode(
 						token.type as InlineNodeType,

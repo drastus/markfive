@@ -1,5 +1,8 @@
+import type {InlineToken} from './types';
+
 const attributeRegexString = '(?:(?:data-)?[a-z]+(?:=(?:\\w+|"[^"]*"|\'[^\']*\'))?|\\.[^ \\t{}]+|#[^ \\t{}]+)';
 export const attributesRegexString = `(?:{(${attributeRegexString}(?: ${attributeRegexString})*)})?`;
+export const defaultAttributeRegexString = '\\(([^()]*(\\([^()]+\\))?[^()]*)\\)';
 
 export const parseAttributes = (attributesString?: string) => {
 	if (attributesString === undefined) return undefined;
@@ -75,6 +78,22 @@ export const findIndicesInRange = <T>(array: T[], predicate: (item: T) => unknow
 		index = findIndexInRange(array, predicate, index + 1, to);
 	}
 	return indices;
+};
+
+export const findCloseBracketIndexInRange = (array: InlineToken[], from: number, to?: number) => {
+	let balance = 1;
+	let index = from;
+	while (index < (to ?? array.length)) {
+		const item = array[index];
+		if (item) {
+			if (item.type === 'BRACKET' && item.text?.[0] === '[') balance++;
+			if (item.type === 'BRACKET' && item.text?.[0] === ']') balance--;
+		}
+		if (balance === 0) break;
+		index++;
+	}
+	if (balance !== 0) return undefined;
+	return index;
 };
 
 export const trimAndJoin = (array: string[]) => array

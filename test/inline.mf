@@ -6,3 +6,5 @@ Additional escapes are required here:
 \#[J]\#ava\#[S]#cript abbreviation is JS.
 
 In su^\[per]^scripts inner brackets are cut out too, but escaping works as expected.
+
+Word :defs:(definitions) can have default `title` attributes.

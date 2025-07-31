@@ -28,6 +28,7 @@ export type LineTokenType =
 	| 'LINE_WITH_TABLE_ROW_SEPARATOR_MARK'
 	| 'LINE_WITH_TABLE_CELL_MARK'
 	| 'LINE_WITH_MATH_MARK'
+	| 'LINE_WITH_BLOCK_OTHER_MARK'
 	| 'TEXT_LINE';
 
 export type LineToken = {
@@ -63,7 +64,8 @@ export type BlockNodeType =
 	| 'TABLE'
 	| 'TABLE_ROW'
 	| 'TABLE_CELL'
-	| 'BLOCK_MATH';
+	| 'BLOCK_MATH'
+	| 'BLOCK_OTHER';
 
 export type InlineTokenType =
 	| 'TEXT'
@@ -93,7 +95,8 @@ export type InlineTokenType =
 	| 'IMAGE'
 	| 'SPAN'
 	| 'BR'
-	| 'WBR';
+	| 'WBR'
+	| 'INLINE_OTHER';
 
 export type InlineNodeType =
 	| 'TEXT'
@@ -122,7 +125,8 @@ export type InlineNodeType =
 	| 'IMG'
 	| 'OBJECT'
 	| 'BR'
-	| 'WBR';
+	| 'WBR'
+	| 'INLINE_OTHER';
 
 export type InlineToken = {
 	type: InlineTokenType,

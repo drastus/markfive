@@ -1,0 +1,19 @@
+@header
+	Header content
+
+@main
+	Main content
+
+	Second paragraph that includes @time[today's date]{datetime='2025-07-30T13:31:32+02:00'}.
+
+	Third paragraph that includes @time[today's date](2025-07-30T13:31:32+02:00) with default parameter.
+
+	Here is some ruby: @ruby[base @rt[ruby text] ].
+
+	@pre
+		Pre        formatted      text
+		some          other
+		              text
+
+@footer
+	Footer content

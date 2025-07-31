@@ -65,6 +65,8 @@ class LineParser {
 			return true;
 		} else if (this.prevToken().type === 'LINE_WITH_DIV_MARK' && !this.prevToken().text) {
 			return true;
+		} else if (this.prevToken().type === 'LINE_WITH_BLOCK_OTHER_MARK' && this.prevToken().marker !== 'pre') {
+			return true;
 		} else if (this.prevToken().type === 'LINE_WITH_ATTRIBUTES') {
 			if (this.tokens[this.current - 2]!.type === 'EMPTY_LINE' || this.tokens[this.current - 2] === undefined) {
 				return true;
@@ -85,7 +87,7 @@ class LineParser {
 		if (indent < this.indentStack.at(-1)!) {
 			const newIndentStackEnd = (this.indentStack.findIndex((i) => i >= indent) ?? 0) + 1;
 			this.indentStack = this.indentStack.slice(0, newIndentStackEnd);
-			if (['BLOCK_QUOTE', 'DIV', 'DESCRIPTION_LIST'].includes(this.activeNode().type)) {
+			if (['BLOCK_QUOTE', 'DIV', 'DESCRIPTION_LIST', 'BLOCK_OTHER'].includes(this.activeNode().type)) {
 				this.indentStack.pop();
 			}
 		}
@@ -110,7 +112,7 @@ class LineParser {
 
 	addTextNode = (token: LineToken) => {
 		let content: string;
-		if (this.activeNode().type === 'BLOCK_CODE') {
+		if (this.activeNode().type === 'BLOCK_CODE' || (this.activeNode().type === 'BLOCK_OTHER' && this.activeNode().subtype === 'pre')) {
 			if (this.preIndent === 0) this.preIndent = token.indent!;
 			content = trimIndent(token.line!, this.preIndent);
 		} else {
@@ -493,6 +495,22 @@ class LineParser {
 				token.indent,
 				{cantHaveChildLines: true},
 			);
+			return;
+		}
+
+		if (token.type === 'LINE_WITH_BLOCK_OTHER_MARK') {
+			if ((this.tokens[this.current + 1]?.indent ?? 0) > (token.indent ?? 0)) {
+				this.addNode(
+					new BlockNode('BLOCK_OTHER', {
+						subtype: token.marker,
+						attributes: parseAttributes(token.attributes),
+					}),
+					token.indent,
+				);
+				this.preIndent = 0;
+			} else {
+				this.addTextNode(token);
+			}
 			return;
 		}
 	};
