@@ -18,8 +18,6 @@ const commonTokens: Array<{chars: string, type: InlineTokenType, position?: 'sta
 	{chars: '\'\'', type: 'CITE'},
 	{chars: '__', type: 'U'},
 	{chars: '--', type: 'S'},
-	{chars: '[[', type: 'KEY', position: 'start'},
-	{chars: ']]', type: 'KEY', position: 'end'},
 	{chars: '[|', type: 'BUTTON', position: 'start'},
 	{chars: '|]', type: 'BUTTON', position: 'end'},
 	{chars: '?[', type: 'SPAN', position: 'start'},
@@ -250,6 +248,45 @@ class InlineParser {
 			} else if (token.type === 'BRACKET' && token.positions?.includes('start')) {
 				const closeTokenIndex = findCloseBracketIndexInRange(tokens, index + 1);
 				if (closeTokenIndex !== undefined
+					&& tokens[index + 1]?.type === 'BRACKET' && tokens[index + 1]?.text?.[0] === '['
+					&& tokens[closeTokenIndex - 1]?.type === 'BRACKET' && tokens[closeTokenIndex - 1]?.text?.[0] === ']'
+				) {
+					let newNode = new InlineNode(
+						'KEY',
+						{tokens: tokens.slice(index + 2, closeTokenIndex - 1), attributes},
+					);
+					const joinerIndices = findIndicesInRange<InlineToken>(
+						tokens, (t) => t.type === 'KEY_JOINER', index + 2, closeTokenIndex - 1,
+					);
+					if (joinerIndices.length > 0) {
+						newNode = new InlineNode(
+							'KBD',
+							{children: [], attributes},
+						);
+						let subindex = index + 2;
+						for (const joinerIndex of joinerIndices) {
+							newNode.children.push(new InlineNode(
+								'KEY',
+								{
+									tokens: tokens.slice(subindex, joinerIndex),
+									attributes,
+								},
+							));
+							newNode.children.push(new InlineNode('KEY_JOINER'));
+							subindex = joinerIndex + 1;
+						}
+						newNode.children.push(new InlineNode(
+							'KEY',
+							{
+								tokens: tokens.slice(subindex, closeTokenIndex - 1),
+								attributes,
+							},
+						));
+					}
+					node.children.push(newNode);
+					index = closeTokenIndex + 1;
+					continue;
+				} else if (closeTokenIndex !== undefined
 					&& tokens.slice(index + 1, closeTokenIndex).every((t) => t.text === '*')
 					&& !expectedNoteSubtype
 					&& !tokens[closeTokenIndex]!.defaultAttribute
@@ -379,39 +416,6 @@ class InlineParser {
 					if (tokens[index + 1]?.type === 'BRACKET' && tokens[index + 1]!.positions?.includes('start')
 						&& tokens[closeTokenIndex - 1]?.type === 'BRACKET' && tokens[closeTokenIndex - 1]!.positions?.includes('end')) {
 						newNode.tokens = tokens.slice(index + 2, closeTokenIndex - 1);
-					}
-					if (token.type === 'KEY') {
-						const joinerIndices = findIndicesInRange<InlineToken>(
-							tokens, (t) => t.type === 'KEY_JOINER', index + 1, closeTokenIndex,
-						);
-						if (joinerIndices.length > 0) {
-							newNode = new InlineNode(
-								'KBD',
-								{children: [], attributes},
-							);
-							let subindex = index + 1;
-							for (const joinerIndex of joinerIndices) {
-								newNode.children.push(new InlineNode(
-									'KEY',
-									{
-										tokens: tokens.slice(subindex, joinerIndex),
-										attributes,
-									},
-								));
-								newNode.children.push(new InlineNode('KEY_JOINER'));
-								subindex = joinerIndex + 1;
-							}
-							newNode.children.push(new InlineNode(
-								'KEY',
-								{
-									tokens: tokens.slice(subindex, closeTokenIndex),
-									attributes,
-								},
-							));
-						}
-						node.children.push(newNode);
-						index = closeTokenIndex + 1;
-						continue;
 					}
 					if (token.type === 'BUTTON') {
 						const separatorIndices = findIndicesInRange<InlineToken>(

@@ -8,7 +8,7 @@
 
 	Third paragraph that includes @time[today's date](2025-07-30T13:31:32+02:00) with default parameter.
 
-	Here is some ruby: @ruby[base @rt[ruby text] ].
+	Here is some ruby: @ruby[base @rt[ruby text]].
 
 	@pre
 		Pre        formatted      text
