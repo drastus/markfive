@@ -10,6 +10,15 @@
 
 	print(factorial)
 
+Code block with line token markers:
+``
+	print('test');
+
+	- Not a list item
+	- Not a list item too
+
+	> Not a block kbd
+
 One-line code snippet:
 
 `` print('Hello, world!')

@@ -18,7 +18,7 @@
 |v| Escaping
 |v| Intra-word elements
 |v| Other HTML elements
-|_| Comments
+|v| Comments
 |_| Enhanced ordered lists
 |_| Hgroups and multi-line headers
 |_| Code highlighting

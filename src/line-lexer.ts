@@ -269,6 +269,20 @@ class LineLexer {
 			return;
 		}
 
+		if (match = line.match(`^([ \t]*)${escape}//(?: (.+))?$`)) {
+			if (!match[2]) {
+				this.tokens.push({
+					type: 'LINE_WITH_COMMENT_MARK',
+					line,
+					indent: calculateIndent(match[1]),
+					text: match[3],
+				});
+			} else {
+				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+			}
+			return;
+		}
+
 		this.tokens.push({
 			type: 'TEXT_LINE',
 			line,

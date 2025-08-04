@@ -29,6 +29,7 @@ export type LineTokenType =
 	| 'LINE_WITH_TABLE_CELL_MARK'
 	| 'LINE_WITH_MATH_MARK'
 	| 'LINE_WITH_BLOCK_OTHER_MARK'
+	| 'LINE_WITH_COMMENT_MARK'
 	| 'TEXT_LINE';
 
 export type LineToken = {
@@ -65,7 +66,8 @@ export type BlockNodeType =
 	| 'TABLE_ROW'
 	| 'TABLE_CELL'
 	| 'BLOCK_MATH'
-	| 'BLOCK_OTHER';
+	| 'BLOCK_OTHER'
+	| 'COMMENT';
 
 export type InlineTokenType =
 	| 'TEXT'

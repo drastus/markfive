@@ -15,6 +15,7 @@ const isNestingAllowed = (parentNodeType: BlockNodeType, nodeType: BlockNodeType
 		BLOCK_CODE: ['LINE'],
 		BLOCK_KBD: ['LINE'],
 		BLOCK_SAMP: ['LINE'],
+		COMMENT: ['LINE'],
 	};
 	if (allowedNestings[parentNodeType]) {
 		return allowedNestings[parentNodeType].includes(nodeType);
@@ -54,7 +55,7 @@ class LineParser {
 
 	isOpenPosition = () => {
 		if (this.current === 0) return true;
-		if (this.activeNode().type === 'BLOCK_CODE' && (this.tokens[this.current]?.indent ?? 0) > this.indentStack.at(-1)!) {
+		if (['BLOCK_CODE', 'COMMENT'].includes(this.activeNode().type) && (this.tokens[this.current]?.indent ?? 0) > this.indentStack.at(-1)!) {
 			return false;
 		}
 		if (this.prevToken().type === 'EMPTY_LINE') {
@@ -114,9 +115,9 @@ class LineParser {
 		let content: string;
 		if (this.activeNode().type === 'BLOCK_CODE' || (this.activeNode().type === 'BLOCK_OTHER' && this.activeNode().subtype === 'pre')) {
 			if (this.preIndent === 0) this.preIndent = token.indent!;
-			content = trimIndent(token.line!, this.preIndent);
+			content = trimIndent(token.line ?? '', this.preIndent);
 		} else {
-			content = token.line!.trim();
+			content = token.line?.trim() ?? '';
 		}
 
 		if (this.isOpenPosition()) {
@@ -150,6 +151,11 @@ class LineParser {
 
 	parseToken = () => {
 		const token = this.tokens[this.current]!;
+
+		if (['BLOCK_CODE', 'COMMENT'].includes(this.activeNode().type) && (token.indent ?? 0) > this.indentStack.at(-1)!) {
+			this.addTextNode(token);
+			return;
+		}
 
 		if (token.type === 'EMPTY_LINE') {
 			const activeNode = this.activeNode();
@@ -510,6 +516,24 @@ class LineParser {
 				this.preIndent = 0;
 			} else {
 				this.addTextNode(token);
+			}
+			return;
+		}
+
+		if (token.type === 'LINE_WITH_COMMENT_MARK') {
+			if ((this.tokens[this.current + 1]?.indent ?? 0) > (token.indent ?? 0)) {
+				this.addNode(
+					new BlockNode('COMMENT'),
+					token.indent,
+				);
+			} else { // single-line
+				this.addNode(
+					new BlockNode('COMMENT', {
+						children: [new BlockNode('LINE', {content: token.text})],
+					}),
+					token.indent,
+				);
+				this.indentStack.pop();
 			}
 			return;
 		}

@@ -203,6 +203,9 @@ class Renderer {
 			});
 			return `${string}</${node.subtype}>`;
 		}
+		if (node.type === 'COMMENT') {
+			return '';
+		}
 		if (node.type === 'NOTE') {
 			const refCount = (this.noteRefs[node.subtype!]?.length ?? 0) + 1;
 			const count = node.id

@@ -1,0 +1,15 @@
+The line below is commented out.
+
+// This is a comment.
+
+The whole block below is commented out.
+
+//
+	First line of comment.
+
+	- Would be a first item of a list
+	- Would be a second item of a list
+
+	End line of comment.
+
+Not a comment.
