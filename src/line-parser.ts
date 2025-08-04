@@ -209,13 +209,16 @@ class LineParser {
 
 		if (token.type === 'LINE_WITH_HEADING_MARK') {
 			if (this.isOpenPosition()) {
-				if (this.tokens[this.current + 1]?.type === 'EMPTY_LINE') {
+				if (this.tokens[this.current + 1]?.type === 'EMPTY_LINE' || (
+					this.tokens[this.current + 1]?.type === 'TEXT_LINE' && this.tokens[this.current + 2]?.type === 'EMPTY_LINE'
+				)) {
 					this.indentStack = [];
 					this.addNode(
 						new BlockNode('HEADING', {
 							subtype: token.level!.toString(),
 							attributes: this.checkForAttributes(),
 							content: token.text,
+							subcontent: this.tokens[this.current + 1]?.type === 'TEXT_LINE' ? this.tokens[this.current + 1]!.text : undefined,
 						}),
 						token.indent,
 						{cantHaveChildLines: true},

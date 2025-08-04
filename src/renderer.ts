@@ -40,19 +40,17 @@ const countToCue = (count: number, noteType: string) => {
 
 class Renderer {
 	ast: Node;
-	newlineMode: 'br' | 'n';
-	newlineRequired: boolean;
+	newlineMode: 'br' | 'n' = 'br';
+	newlineRequired = false;
 	options: Options;
-	isMathUsed: boolean;
+	isMathUsed = false;
 	notes: Record<string, Node[]> = {};
 	noteRefs: Record<string, Array<{id: string, refId: string}>> = {};
+	headingsStack: number[] = [];
 
 	constructor(ast: Node, options: Options) {
 		this.ast = ast;
-		this.newlineMode = 'br';
-		this.newlineRequired = false;
 		this.options = options;
-		this.isMathUsed = false;
 	}
 
 	escapeHtml = (str: string) => str
@@ -99,7 +97,12 @@ class Renderer {
 
 	render = () => {
 		if (this.options.debug) console.log('\nRenderer render\n');
-		return this.renderNode(this.ast);
+		let rendered = this.renderNode(this.ast);
+		while (this.headingsStack.length > 0) {
+			rendered += '</section>\n';
+			this.headingsStack.pop();
+		}
+		return rendered;
 	};
 
 	renderNode = (node: Node) => {
@@ -113,7 +116,29 @@ class Renderer {
 			if (Object.keys(this.notes).length > 0) string += this.renderNotes();
 			return string;
 		}
-		if (node.type === 'HEADING') elementType = `h${node.subtype}`;
+		if (node.type === 'HEADING') {
+			elementType = `h${node.subtype}`;
+			const currentHeadingLevel = Number(node.subtype);
+
+			let string = '';
+			while (this.headingsStack.length > 0 && this.headingsStack.at(-1)! >= currentHeadingLevel) {
+				string += '</section>\n';
+				this.headingsStack.pop();
+			}
+			if (currentHeadingLevel > 1) {
+				string += '<section>\n';
+				this.headingsStack.push(currentHeadingLevel);
+			}
+
+			if (node.subcontent) string += '<hgroup>\n';
+			string += `<${elementType}${stringifyAttributes(node.attributes)}>`;
+			node.children.forEach((child: Node) => {
+				string += this.renderNode(child);
+			});
+			string += `</${elementType}>\n`;
+			if (node.subcontent) string += `<p>${node.subcontent}</p>\n</hgroup>\n`;
+			return string;
+		}
 		if (node.type === 'TABLE_CELL') elementType = tableCellElementMappings[node.subtype!]!;
 		if (node.type === 'TEXT') {
 			return this.escapeHtml(node.content!);
@@ -197,11 +222,7 @@ class Renderer {
 			return `${string}</${node.subtype}>\n`;
 		}
 		if (node.type === 'INLINE_OTHER') {
-			let string = `<${node.subtype}${stringifyAttributes(node.attributes)}>`;
-			node.children.forEach((child: Node) => {
-				string += this.renderNode(child);
-			});
-			return `${string}</${node.subtype}>`;
+			elementType = node.subtype;
 		}
 		if (node.type === 'COMMENT') {
 			return '';

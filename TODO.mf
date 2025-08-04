@@ -19,8 +19,8 @@
 |v| Intra-word elements
 |v| Other HTML elements
 |v| Comments
+|v| Sections and hgroups
 |_| Enhanced ordered lists
-|_| Hgroups and multi-line headers
 |_| Code highlighting
 |_| Templates
 |_| Config

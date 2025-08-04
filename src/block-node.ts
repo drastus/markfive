@@ -5,6 +5,7 @@ class BlockNode {
 	subtype?: string;
 	attributes?: Record<string, string | string[]>;
 	content?: string;
+	subcontent?: string;
 	children: Node[];
 	tokens?: InlineToken[];
 	// defaultChildType?: BlockNodeType;
@@ -24,6 +25,7 @@ class BlockNode {
 			attributes?: Record<string, string | string[]>,
 			subtype?: string,
 			content?: string,
+			subcontent?: string,
 			children?: Node[],
 		},
 	) {
@@ -31,6 +33,7 @@ class BlockNode {
 		this.subtype = spec?.subtype;
 		this.attributes = spec?.attributes;
 		this.content = spec?.content;
+		this.subcontent = spec?.subcontent;
 		this.children = spec?.children ?? [];
 		// this.defaultChildType = BlockNode.defaultChildTypes[type]
 	}
