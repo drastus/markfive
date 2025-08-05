@@ -132,7 +132,7 @@ export type InlineNodeType =
 
 export type InlineToken = {
 	type: InlineTokenType,
-	positions?: Array<'start' | 'end'>,
+	positions?: Set<'start' | 'end'>,
 	text?: string,
 	attributes?: string,
 	defaultAttribute?: string,

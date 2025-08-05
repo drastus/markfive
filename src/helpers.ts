@@ -99,3 +99,8 @@ export const findCloseBracketIndexInRange = (array: InlineToken[], from: number,
 export const trimAndJoin = (array: string[]) => array
 	.map((item) => item.trim())
 	.join('\n');
+
+export const createHeadingRef = (text: string) => text.toLowerCase()
+	.replace(/\{\/\}/gu, '_')
+	.replace(/\s+/gu, '_')
+	.replace(/[^\p{L}\d_-]/gu, '');

@@ -131,7 +131,8 @@ class Renderer {
 			}
 
 			if (node.subcontent) string += '<hgroup>\n';
-			string += `<${elementType}${stringifyAttributes(node.attributes)}>`;
+			const attributes = node.attributes ?? {};
+			string += `<${elementType}${stringifyAttributes(attributes)}>`;
 			node.children.forEach((child: Node) => {
 				string += this.renderNode(child);
 			});

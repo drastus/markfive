@@ -1,6 +1,6 @@
 /* eslint-disable no-useless-return */
 import BlockNode from './block-node';
-import {parseAttributes, trimIndent} from './helpers';
+import {createHeadingRef, parseAttributes, trimIndent} from './helpers';
 import {markfiveMathToMathML} from './math-parser';
 import {type Options, type LineToken, type Node, type BlockNodeType} from './types';
 
@@ -25,19 +25,16 @@ const isNestingAllowed = (parentNodeType: BlockNodeType, nodeType: BlockNodeType
 
 class LineParser {
 	tokens: LineToken[];
-	current: number;
-	indentStack: number[];
-	preIndent: number;
-	ast: Node;
+	current = 0;
+	indentStack: number[] = [];
+	preIndent = 0;
+	ast: Node = new BlockNode('DOCUMENT');
 	lastAttributes?: string;
+	usedHeadingRefs = new Set<string>();
 	options: Options;
 
 	constructor(tokens: LineToken[], options: Options) {
 		this.tokens = tokens;
-		this.current = 0;
-		this.indentStack = [];
-		this.preIndent = 0;
-		this.ast = new BlockNode('DOCUMENT');
 		this.options = options;
 	}
 
@@ -213,10 +210,14 @@ class LineParser {
 					this.tokens[this.current + 1]?.type === 'TEXT_LINE' && this.tokens[this.current + 2]?.type === 'EMPTY_LINE'
 				)) {
 					this.indentStack = [];
+					const attributes = this.checkForAttributes() ?? {};
+					let headingRef = attributes.id as string | undefined ?? createHeadingRef(token.text!);
+					while (this.usedHeadingRefs.has(headingRef)) headingRef += '_';
+					this.usedHeadingRefs.add(headingRef);
 					this.addNode(
 						new BlockNode('HEADING', {
 							subtype: token.level!.toString(),
-							attributes: this.checkForAttributes(),
+							attributes: {...attributes, id: headingRef},
 							content: token.text,
 							subcontent: this.tokens[this.current + 1]?.type === 'TEXT_LINE' ? this.tokens[this.current + 1]!.text : undefined,
 						}),

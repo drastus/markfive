@@ -157,29 +157,29 @@ class InlineParser {
 							type = 'BUTTON_SEPARATOR';
 						}
 
-						const positions: Array<'start' | 'end'> = [];
+						const positions = new Set<'start' | 'end'>();
 						if (!prevIsAlphanumeric && !nextIsWhitespace && position !== 'end') {
-							positions.push('start');
+							positions.add('start');
 						}
 						if (!nextIsAlphanumeric && !prevIsWhitespace && position !== 'start') {
-							positions.push('end');
+							positions.add('end');
 						}
 						if (content[startIndex + consumedChars] === '[') {
-							positions.push('start');
+							positions.add('start');
 						}
 						if (content[startIndex - 1] === ']') {
-							positions.push('end');
+							positions.add('end');
 						}
 						if (['SUB', 'SUP'].includes(type)) {
 							if (!prevIsWhitespace) {
-								positions.push('start');
+								positions.add('start');
 							}
 							if (!nextIsWhitespace) {
-								positions.push('end');
+								positions.add('end');
 							}
 						}
 						if (type === 'BRACKET') {
-							positions.push(position!);
+							positions.add(position!);
 						}
 						const newToken: InlineToken = {
 							type,
@@ -187,14 +187,14 @@ class InlineParser {
 							text: content.slice(startIndex, startIndex + consumedChars),
 						};
 						const contentRest = content.slice(startIndex + consumedChars);
-						if (!positions.includes('start')) {
+						if (!positions.has('start')) {
 							match = contentRest.match(`^${attributesRegexString}`);
 							if (match?.[1]) {
 								newToken.attributes = match[1];
 								consumedChars += match[0].length;
 							}
 						}
-						if (['BRACKET', 'DFN'].includes(type) && positions.includes('end')) {
+						if (['BRACKET', 'DFN'].includes(type) && positions.has('end')) {
 							match = contentRest.match(`^(${defaultAttributeRegexString})?(${attributesRegexString})?`);
 							if (match?.[2] || match?.[4]) {
 								newToken.defaultAttribute = match[2];
@@ -245,7 +245,7 @@ class InlineParser {
 			if (['BR', 'WBR'].includes(token.type)) {
 				node.children.push(new InlineNode(token.type as 'BR' | 'WBR'));
 				index++;
-			} else if (token.type === 'BRACKET' && token.positions?.includes('start')) {
+			} else if (token.type === 'BRACKET' && token.positions?.has('start')) {
 				const closeTokenIndex = findCloseBracketIndexInRange(tokens, index + 1);
 				if (closeTokenIndex !== undefined
 					&& tokens[index + 1]?.type === 'BRACKET' && tokens[index + 1]?.text?.[0] === '['
@@ -374,7 +374,7 @@ class InlineParser {
 				index = nextCellTokenIndex;
 			} else if (token.type === 'IMAGE') {
 				index++;
-			} else if (token.positions?.includes('start')) {
+			} else if (token.positions?.has('start')) {
 				let closeTokenIndex: number | undefined;
 				if (selfNestableTokenTypes.includes(token.type)) {
 					let startIndex = index + 1;
@@ -385,7 +385,7 @@ class InlineParser {
 							tokens, (t) => t.type === token.type, startIndex,
 						);
 						if (newTokenIndex !== undefined) {
-							if (tokens[newTokenIndex]!.positions?.includes('end') && newTokenIndex >= startIndex) {
+							if (tokens[newTokenIndex]!.positions?.has('end') && newTokenIndex >= startIndex) {
 								closeTokenIndex = newTokenIndex;
 								depth -= 1;
 							} else {
@@ -396,7 +396,7 @@ class InlineParser {
 					} while (depth > 0 && newTokenIndex !== undefined);
 				} else { // non-self-nestable
 					closeTokenIndex = findIndexInRange<InlineToken>(
-						tokens, (t) => t.type === token.type && t.positions?.includes('end'), index + 1,
+						tokens, (t) => t.type === token.type && t.positions?.has('end'), index + 1,
 					);
 				}
 				if (closeTokenIndex !== undefined && closeTokenIndex - index > 1) { // close token found
@@ -413,8 +413,8 @@ class InlineParser {
 						token.type as InlineNodeType,
 						{tokens: tokens.slice(index + 1, closeTokenIndex), attributes},
 					);
-					if (tokens[index + 1]?.type === 'BRACKET' && tokens[index + 1]!.positions?.includes('start')
-						&& tokens[closeTokenIndex - 1]?.type === 'BRACKET' && tokens[closeTokenIndex - 1]!.positions?.includes('end')) {
+					if (tokens[index + 1]?.type === 'BRACKET' && tokens[index + 1]!.positions?.has('start')
+						&& tokens[closeTokenIndex - 1]?.type === 'BRACKET' && tokens[closeTokenIndex - 1]!.positions?.has('end')) {
 						newNode.tokens = tokens.slice(index + 2, closeTokenIndex - 1);
 					}
 					if (token.type === 'BUTTON') {
@@ -467,8 +467,8 @@ class InlineParser {
 							&& (tokens[closeTokenIndex + 1]?.type !== 'TEXT' || tokens[closeTokenIndex + 1]?.text!.startsWith(' ')))
 							|| contentText.includes(' '))
 					) {
-						if (tokens[index + 1]!.type === 'BRACKET' && tokens[index + 1]!.positions?.includes('start')
-							&& tokens[closeTokenIndex - 1]!.type === 'BRACKET' && tokens[closeTokenIndex - 1]!.positions?.includes('end')
+						if (tokens[index + 1]!.type === 'BRACKET' && tokens[index + 1]!.positions?.has('start')
+							&& tokens[closeTokenIndex - 1]!.type === 'BRACKET' && tokens[closeTokenIndex - 1]!.positions?.has('end')
 						) {
 							newNode = new InlineNode(token.type as InlineNodeType, {
 								tokens: tokens.slice(index + 2, closeTokenIndex - 1),
