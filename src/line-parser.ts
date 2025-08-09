@@ -31,6 +31,7 @@ class LineParser {
 	ast: Node = new BlockNode('DOCUMENT');
 	lastAttributes?: string;
 	usedHeadingRefs = new Set<string>();
+	listCounters: number[] = [];
 	options: Options;
 
 	constructor(tokens: LineToken[], options: Options) {
@@ -97,6 +98,9 @@ class LineParser {
 
 		let activeNode = this.activeNode();
 		if (!isNestingAllowed(activeNode.type, node.type)) {
+			if (activeNode.type === 'ORDERED_LIST') {
+				this.listCounters.pop();
+			}
 			this.indentStack.pop();
 			activeNode = this.activeNode();
 		}
@@ -244,11 +248,14 @@ class LineParser {
 		}
 
 		if (token.type === 'LINE_WITH_LIST_ITEM_MARK') {
+			let startsNewList = false;
 			const listType = token.marker === '-' ? 'UNORDERED_LIST' : 'ORDERED_LIST';
-			if ((token.indent ?? 0) > this.indentStack.at(-1)!) { // new subitem
+			if (
+				(token.indent ?? 0) > this.indentStack.at(-1)! // new subitem
+				|| ((token.indent ?? 0) === this.indentStack.at(-1)! && this.prevToken().type === 'EMPTY_LINE') // new list
+			) {
 				this.addNode(new BlockNode(listType, {attributes: this.checkForAttributes()}), token.indent);
-			} else if ((token.indent ?? 0) === this.indentStack.at(-1)! && this.prevToken().type === 'EMPTY_LINE') { // new list
-				this.addNode(new BlockNode(listType, {attributes: this.checkForAttributes()}), token.indent);
+				startsNewList = true;
 			} else {
 				this.adaptIndentStack(token.indent);
 				if (!['ORDERED_LIST', 'UNORDERED_LIST'].includes(this.activeNode().type)) { // new list
@@ -257,14 +264,26 @@ class LineParser {
 						token.indent,
 						{skipIndentAdapting: true},
 					);
+					startsNewList = true;
 				}
 			}
 			const cantHaveChildLines = (this.tokens[this.current + 1]?.indent ?? 0) <= (token.indent ?? 0);
+			let attributes = parseAttributes(token.attributes);
+			if (token.marker !== '-') {
+				const counter = parseInt(token.marker!, 10);
+				if (startsNewList) {
+					this.listCounters.push(counter);
+					if (counter !== 1) attributes = {value: counter, ...attributes};
+				} else {
+					if (counter !== this.listCounters[this.listCounters.length - 1]! + 1) attributes = {value: counter, ...attributes};
+					this.listCounters[this.listCounters.length - 1] = counter;
+				}
+			}
 			this.addNode( // new item
 				new BlockNode('LIST_ITEM', {
 					subtype: token.marker,
 					content: cantHaveChildLines ? token.text : undefined,
-					attributes: parseAttributes(token.attributes),
+					attributes,
 				}),
 				token.indent,
 				{cantHaveChildLines, skipIndentAdapting: true},

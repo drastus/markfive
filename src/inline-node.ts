@@ -4,7 +4,7 @@ class InlineNode {
 	type: InlineNodeType;
 	subtype?: string;
 	id?: string;
-	attributes?: Record<string, string | string[]>;
+	attributes?: Record<string, string | string[] | number>;
 	content?: string;
 	children: Node[];
 	tokens?: InlineToken[];
@@ -12,7 +12,7 @@ class InlineNode {
 	constructor(
 		type: InlineNodeType,
 		spec?: {
-			attributes?: Record<string, string | string[]>,
+			attributes?: Record<string, string | string[] | number>,
 			content?: string,
 			children?: Node[],
 			tokens?: InlineToken[],

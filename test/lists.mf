@@ -20,8 +20,8 @@ Here is a paragraph after the list.
 2. Item 2
 4. Item 4
 
+0. Other list item
 1. Other list item
-2. Other list item
 
 : :Apartment:, n.
 	= An execution context grouping one or more threads with one or more COM objects.

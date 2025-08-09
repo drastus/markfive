@@ -20,7 +20,7 @@
 |v| Other HTML elements
 |v| Comments
 |v| Sections and hgroups
-|_| Enhanced ordered lists
+|v| Custom values in ordered lists
 |_| Code highlighting
 |_| Templates
 |_| Config
@@ -28,6 +28,8 @@
 |_| Colspans and rowspans
 |_| Numeric table headers
 |_| Figures
+|_| More styles of ordered lists
+|_| Reversed ordered lists
 |_| Metadata variables
 |_| Additional entities
 |_| Emojis

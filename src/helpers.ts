@@ -4,7 +4,7 @@ const attributeRegexString = '(?:(?:data-)?[a-z]+(?:=(?:\\w+|"[^"]*"|\'[^\']*\')
 export const attributesRegexString = `(?:{(${attributeRegexString}(?: ${attributeRegexString})*)})?`;
 export const defaultAttributeRegexString = '\\(([^()]*(\\([^()]+\\))?[^()]*)\\)';
 
-export const parseAttributes = (attributesString?: string) => {
+export const parseAttributes = (attributesString?: string): Record<string, string | string[] | number> | undefined => {
 	if (attributesString === undefined) return undefined;
 
 	const attributes: Record<string, string | string[]> = {};
@@ -40,7 +40,7 @@ export const parseAttributes = (attributesString?: string) => {
 	return attributes;
 };
 
-export const stringifyAttributes = (attributes?: Record<string, string | string[]>) => {
+export const stringifyAttributes = (attributes?: Record<string, string | string[] | number>) => {
 	let string = '';
 	if (!attributes) return string;
 	for (const [attributeName, attributeValue] of Object.entries(attributes)) {

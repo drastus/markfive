@@ -3,7 +3,7 @@ import {type BlockNodeType, type InlineToken, type Node} from './types';
 class BlockNode {
 	type: BlockNodeType;
 	subtype?: string;
-	attributes?: Record<string, string | string[]>;
+	attributes?: Record<string, string | string[] | number>;
 	content?: string;
 	subcontent?: string;
 	children: Node[];
@@ -22,7 +22,7 @@ class BlockNode {
 	constructor(
 		type: BlockNodeType,
 		spec?: {
-			attributes?: Record<string, string | string[]>,
+			attributes?: Record<string, string | string[] | number>,
 			subtype?: string,
 			content?: string,
 			subcontent?: string,

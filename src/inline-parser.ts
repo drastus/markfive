@@ -236,7 +236,7 @@ class InlineParser {
 
 		while (index < tokens.length) {
 			const token = tokens[index]!;
-			let attributes: Record<string, string | string[]> | undefined;
+			let attributes: Record<string, string | string[] | number> | undefined;
 
 			if (token.type === 'MATH') {
 				index++;

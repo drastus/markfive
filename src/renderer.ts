@@ -184,7 +184,10 @@ class Renderer {
 			return `${string}</samp></pre>\n`;
 		}
 		if (node.type === 'KEY') {
-			const attributes = stringifyAttributes({...node.attributes, class: [...(node.attributes?.class ?? []), 'mf-key']});
+			const attributes = stringifyAttributes({
+				...node.attributes,
+				class: [...((node.attributes?.class as string[] | undefined) ?? []), 'mf-key'],
+			});
 			let string = `<kbd${attributes}>`;
 			node.children.forEach((child: Node) => {
 				string += this.renderNode(child);
@@ -195,7 +198,10 @@ class Renderer {
 			return '<span class="mf-key-joiner">+</span>';
 		}
 		if (node.type === 'BUTTON') {
-			const attributes = stringifyAttributes({...node.attributes, class: [...(node.attributes?.class ?? []), 'mf-button']});
+			const attributes = stringifyAttributes({
+				...node.attributes,
+				class: [...((node.attributes?.class as string[] | undefined) ?? []), 'mf-button'],
+			});
 			let string = `<kbd${attributes}><samp>`;
 			node.children.forEach((child: Node) => {
 				string += this.renderNode(child);
