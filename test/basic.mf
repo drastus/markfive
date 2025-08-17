@@ -64,13 +64,14 @@ Chapter 3{/}Tables
 Simple table
 ------------
 
-|! Name ! Position
-|| Chao | Intern
-|| Nguyễn | Worker
+! Name   ! Position
+| Chao   | Intern
+| Nguyễn | Worker
 
 Long table
 ----------
 
+|-
 ! Name
 ! Position
 |-

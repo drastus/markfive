@@ -10,6 +10,7 @@ const elementMappings: Partial<Record<BlockNodeType, string>> = {
 	LIST_ITEM: 'li',
 	DESCRIPTION_LIST: 'dl',
 	TABLE_ROW: 'tr',
+	EXPLICIT_TABLE_ROW: 'tr',
 	SEPARATOR: 'hr',
 	BLOCK_QUOTE: 'blockquote',
 };
@@ -140,7 +141,7 @@ class Renderer {
 			if (node.subcontent) string += `<p>${node.subcontent}</p>\n</hgroup>\n`;
 			return string;
 		}
-		if (node.type === 'TABLE_CELL') elementType = tableCellElementMappings[node.subtype!]!;
+		if (node.type === 'TABLE_CELLS') elementType = tableCellElementMappings[node.subtype!]!;
 		if (node.type === 'TEXT') {
 			return this.escapeHtml(node.content!);
 		}
@@ -210,6 +211,13 @@ class Renderer {
 		}
 		if (node.type === 'BUTTON_SEPARATOR') {
 			return '<span class="mf-button-separator">|</span>';
+		}
+		if (node.type === 'TABLE_CELLS') {
+			let string = '';
+			node.children.forEach((child: Node) => {
+				string += this.renderNode(child);
+			});
+			return string;
 		}
 		if (node.type === 'BLOCK_MATH') {
 			this.isMathUsed = true;

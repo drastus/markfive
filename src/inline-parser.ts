@@ -99,7 +99,7 @@ class InlineParser {
 			return tokens;
 		}
 
-		const availableTokens = type === 'TABLE_ROW'
+		const availableTokens = type === 'TABLE_CELLS'
 			? commonTokens.slice(0, -1).concat(tableRowTokens)
 			: commonTokens;
 
@@ -187,7 +187,7 @@ class InlineParser {
 							text: content.slice(startIndex, startIndex + consumedChars),
 						};
 						const contentRest = content.slice(startIndex + consumedChars);
-						if (!positions.has('start')) {
+						if (!positions.has('start') || ['TD', 'TH'].includes(type)) {
 							match = contentRest.match(`^${attributesRegexString}`);
 							if (match?.[1]) {
 								newToken.attributes = match[1];
@@ -367,8 +367,14 @@ class InlineParser {
 				const nextCellTokenIndex = findIndexInRange<InlineToken>(
 					tokens, (t) => ['TD', 'TH'].includes(t.type), index + 1,
 				) ?? tokens.length;
+				let colspan = 1;
+				while (tokens[index + colspan]?.type === 'KBD') colspan++;
+				if (tokens[index + colspan]?.text) tokens[index + colspan]!.text = tokens[index + colspan]!.text!.trimStart();
+				if (tokens[nextCellTokenIndex - 1]?.text) tokens[nextCellTokenIndex - 1]!.text = tokens[nextCellTokenIndex - 1]!.text!.trimEnd();
+				const attributes = parseAttributes(token.attributes);
 				const newNode = new InlineNode(token.type as InlineNodeType, {
-					tokens: tokens.slice(index + 1, nextCellTokenIndex),
+					tokens: tokens.slice(index + colspan, nextCellTokenIndex),
+					attributes: colspan > 1 ? {colspan, ...attributes} : attributes,
 				});
 				node.children.push(newNode);
 				index = nextCellTokenIndex;

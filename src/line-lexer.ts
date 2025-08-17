@@ -185,14 +185,13 @@ class LineLexer {
 			return;
 		}
 
-		if (match = line.match(`^([ \t]*)${escape}\\|${attributesRegexString}(\\||!)(?: (.+))?$`)) {
+		if (match = line.match(`^([ \t]*)${escape}\\|-[|-]*${attributesRegexString}`)) {
 			if (!match[2]) {
 				this.tokens.push({
 					type: 'LINE_WITH_TABLE_ROW_MARK',
 					line,
 					indent: calculateIndent(match[1]),
 					attributes: match[3],
-					text: match[4] + ' ' + match[5],
 				});
 			} else {
 				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
@@ -200,29 +199,13 @@ class LineLexer {
 			return;
 		}
 
-		if (match = line.match(`^([ \t]*)${escape}\\|-${attributesRegexString}`)) {
-			if (!match[2]) {
-				this.tokens.push({
-					type: 'LINE_WITH_TABLE_ROW_SEPARATOR_MARK',
-					line,
-					indent: calculateIndent(match[1]),
-					attributes: match[3],
-				});
-			} else {
-				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
-			}
-			return;
-		}
-
-		if (match = line.match(`^([ \t]*)${escape}(\\||!)${attributesRegexString}(?: (.+))?$`)) {
+		if (match = line.match(`^([ \t]*)${escape}(\\||!)(>*)${attributesRegexString}(?: .+)?$`)) {
 			if (!match[2]) {
 				this.tokens.push({
 					type: 'LINE_WITH_TABLE_CELL_MARK',
 					line,
 					indent: calculateIndent(match[1]),
-					marker: match[3],
-					attributes: match[4],
-					text: match[5],
+					text: line,
 				});
 			} else {
 				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});

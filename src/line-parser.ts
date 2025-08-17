@@ -10,8 +10,9 @@ const isNestingAllowed = (parentNodeType: BlockNodeType, nodeType: BlockNodeType
 		ORDERED_LIST: ['LIST_ITEM'],
 		UNORDERED_LIST: ['LIST_ITEM'],
 		DESCRIPTION_LIST: ['DESCRIPTION_LIST_ITEM'],
-		TABLE: ['TABLE_ROW'],
-		TABLE_ROW: ['TABLE_CELL'],
+		TABLE: ['TABLE_ROW', 'EXPLICIT_TABLE_ROW'],
+		TABLE_ROW: ['TABLE_CELLS'],
+		EXPLICIT_TABLE_ROW: ['TABLE_CELLS'],
 		BLOCK_CODE: ['LINE'],
 		BLOCK_KBD: ['LINE'],
 		BLOCK_SAMP: ['LINE'],
@@ -458,31 +459,17 @@ class LineParser {
 		}
 
 		if (token.type === 'LINE_WITH_TABLE_ROW_MARK') {
-			// add this.checkForAttributes()
-			if (this.activeNode().type !== 'TABLE') {
+			if (!['TABLE', 'TABLE_ROW', 'EXPLICIT_TABLE_ROW'].includes(this.activeNode().type)) {
+				const attributes = this.checkForAttributes();
 				this.addNode(
-					new BlockNode('TABLE'),
+					new BlockNode('TABLE', {
+						attributes: this.checkForAttributes(),
+					}),
 					token.indent,
 				);
 			}
 			this.addNode(
-				new BlockNode('TABLE_ROW', {
-					content: token.text,
-					attributes: parseAttributes(token.attributes),
-				}),
-				token.indent,
-				{cantHaveChildLines: true},
-			);
-			return;
-		}
-
-		if (token.type === 'LINE_WITH_TABLE_ROW_SEPARATOR_MARK') {
-			// add this.checkForAttributes()
-			if (this.activeNode().type !== 'TABLE' && this.activeNode().type !== 'TABLE_ROW') {
-				this.addNode(new BlockNode('TABLE'), token.indent);
-			}
-			this.addNode(
-				new BlockNode('TABLE_ROW', {
+				new BlockNode('EXPLICIT_TABLE_ROW', {
 					attributes: parseAttributes(token.attributes),
 				}),
 				token.indent,
@@ -491,10 +478,19 @@ class LineParser {
 		}
 
 		if (token.type === 'LINE_WITH_TABLE_CELL_MARK') {
-			// add this.checkForAttributes()
-			if (this.activeNode().type !== 'TABLE' && this.activeNode().type !== 'TABLE_ROW') {
+			if (this.activeNode().type === 'TABLE_ROW') {
 				this.addNode(
-					new BlockNode('TABLE'),
+					new BlockNode('TABLE_ROW', {
+						attributes: parseAttributes(token.attributes),
+					}),
+					token.indent,
+				);
+			}
+			if (!['TABLE', 'TABLE_ROW', 'EXPLICIT_TABLE_ROW'].includes(this.activeNode().type)) {
+				this.addNode(
+					new BlockNode('TABLE', {
+						attributes: this.checkForAttributes(),
+					}),
 					token.indent,
 				);
 				this.addNode(
@@ -505,7 +501,7 @@ class LineParser {
 				);
 			}
 			this.addNode(
-				new BlockNode('TABLE_CELL', {
+				new BlockNode('TABLE_CELLS', {
 					subtype: token.marker,
 					content: token.text,
 					attributes: parseAttributes(token.attributes),

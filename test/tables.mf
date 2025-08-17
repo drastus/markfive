@@ -1,0 +1,34 @@
+Simple tables
+=============
+
+Simple table
+------------
+
+{.simple-table}
+! Title             ! Author             ! Year
+| The Title         | Author             | 2015
+| Other Title       | Other Author       | 2020
+| Yet Another Title | Yet Another Author |{.last-year} 2025
+
+Simple table with colspan and rowspan
+-------------------------------------
+
+! First name ! Last name ! Paid
+| John       | Doe       | 400
+| Bob        | Smith     | 600
+|> Total                 | 1000
+
+
+Complex tables
+==============
+
+|-------------------|--------------------|-----------------
+! Title             ! Author             ! Year
+|-------------------|--------------------|-----------------
+| The Title         | Author             | 2015
+|-------------------|--------------------|-----------------
+| Other Title
+| Other Author
+| 2020
+|-------------------|--------------------|-----------------
+| Yet Another Title | Yet Another Author |{.last-year} 2025
