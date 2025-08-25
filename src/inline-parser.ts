@@ -51,12 +51,13 @@ const inlineOtherElements = ['abbr', 'bdi', 'data', 'del', 'ins', 'rt', 'ruby', 
 
 class InlineParser {
 	ast: Node;
-	current: number;
+	current = 0;
+	currentTable: Node | null = null;
+	currentTableRows: Array<Array<Node | null>> = [];
 	options: Options;
 
 	constructor(source: Node, options: Options) {
 		this.ast = source;
-		this.current = 0;
 		this.options = options;
 	}
 
@@ -70,8 +71,13 @@ class InlineParser {
 	};
 
 	parseNode = (node: Node) => {
-		if (node.content ?? node.tokens) {
+		if (node.type === 'TABLE') {
+			this.currentTable = node;
+		}
+		if (node.content) {
 			node.tokens ||= this.getNodeTokens(node.content!, node.type as BlockNodeType);
+		}
+		if (node.tokens) {
 			this.parseTokenizedNode(node);
 		}
 		if (node.children) {
@@ -79,6 +85,28 @@ class InlineParser {
 				if (child.type !== 'TEXT') this.parseNode(child);
 			});
 		}
+		if (node.type === 'TABLE') {
+			this.reparseCurrentTable();
+		}
+	};
+
+	reparseCurrentTable = () => {
+		const rowspanNodes: Node[] = [];
+		this.currentTableRows.forEach((row) => {
+			row.forEach((cell, i) => {
+				if (cell && (cell.attributes?.rowspan ?? 1) as number > 1) {
+					rowspanNodes[i] = cell;
+				} else if (cell?.attributes?.['data-in-rowspan'] && rowspanNodes[i]) {
+					rowspanNodes[i].children = [
+						...(rowspanNodes[i].children ?? []),
+						new InlineNode('TEXT', {content: '\n'}),
+						...(cell.children ?? []),
+					];
+				}
+			});
+		});
+		this.currentTable = null;
+		this.currentTableRows = [];
 	};
 
 	addTextToken = (tokens: InlineToken[], text: string) => {
@@ -367,15 +395,34 @@ class InlineParser {
 				const nextCellTokenIndex = findIndexInRange<InlineToken>(
 					tokens, (t) => ['TD', 'TH'].includes(t.type), index + 1,
 				) ?? tokens.length;
+				const rowspan = tokens[index + 1]?.type === 'SUP';
 				let colspan = 1;
-				while (tokens[index + colspan]?.type === 'KBD') colspan++;
-				if (tokens[index + colspan]?.text) tokens[index + colspan]!.text = tokens[index + colspan]!.text!.trimStart();
+				while (tokens[index + colspan + (rowspan ? 1 : 0)]?.type === 'KBD') colspan++;
+				if (node.children.length === 0) {
+					this.currentTableRows.push([]);
+				}
+				const currentCellIndex = this.currentTableRows.at(-1)?.length ?? 0;
+				if (tokens[index + (rowspan ? 1 : 0) + colspan]?.text) tokens[index + (rowspan ? 1 : 0) + colspan]!.text = tokens[index + (rowspan ? 1 : 0) + colspan]!.text!.trimStart();
 				if (tokens[nextCellTokenIndex - 1]?.text) tokens[nextCellTokenIndex - 1]!.text = tokens[nextCellTokenIndex - 1]!.text!.trimEnd();
-				const attributes = parseAttributes(token.attributes);
+				let attributes = parseAttributes(token.attributes);
+				if (rowspan) {
+					let originCell: Node | null = null;
+					let i = 2;
+					while (originCell === null && this.currentTableRows[this.currentTableRows.length - i]) {
+						originCell = this.currentTableRows[this.currentTableRows.length - i]?.[currentCellIndex] ?? null;
+						i++;
+					}
+					if (originCell) {
+						originCell.attributes = {...originCell.attributes, rowspan: (originCell.attributes?.rowspan ?? 1) as number + 1};
+						attributes = {'data-in-rowspan': 'true'};
+					}
+				}
 				const newNode = new InlineNode(token.type as InlineNodeType, {
-					tokens: tokens.slice(index + colspan, nextCellTokenIndex),
+					tokens: tokens.slice(index + (rowspan ? 1 : 0) + colspan, nextCellTokenIndex),
 					attributes: colspan > 1 ? {colspan, ...attributes} : attributes,
 				});
+				this.currentTableRows[this.currentTableRows.length - 1]!.push(newNode);
+				for (let i = 0; i < colspan - 1; i++) this.currentTableRows[this.currentTableRows.length - 1]!.push(null);
 				node.children.push(newNode);
 				index = nextCellTokenIndex;
 			} else if (token.type === 'IMAGE') {

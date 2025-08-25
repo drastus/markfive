@@ -142,6 +142,7 @@ class Renderer {
 			return string;
 		}
 		if (node.type === 'TABLE_CELLS') elementType = tableCellElementMappings[node.subtype!]!;
+		if (node.attributes?.['data-in-rowspan']) return '';
 		if (node.type === 'TEXT') {
 			return this.escapeHtml(node.content!);
 		}

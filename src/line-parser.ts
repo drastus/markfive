@@ -460,7 +460,6 @@ class LineParser {
 
 		if (token.type === 'LINE_WITH_TABLE_ROW_MARK') {
 			if (!['TABLE', 'TABLE_ROW', 'EXPLICIT_TABLE_ROW'].includes(this.activeNode().type)) {
-				const attributes = this.checkForAttributes();
 				this.addNode(
 					new BlockNode('TABLE', {
 						attributes: this.checkForAttributes(),

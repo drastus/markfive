@@ -16,7 +16,8 @@ Simple table with colspan and rowspan
 ! First name ! Last name ! Paid
 | John       | Doe       | 400
 | Bob        | Smith     | 600
-|> Total                 | 1000
+|^           |^  p.v.    | 400
+|> Total                 | 1400
 
 
 Complex tables
@@ -31,4 +32,4 @@ Complex tables
 | Other Author
 | 2020
 |-------------------|--------------------|-----------------
-| Yet Another Title | Yet Another Author |{.last-year} 2025
+| Yet Another Title | Y.A. Author        |{.last-year} 2025

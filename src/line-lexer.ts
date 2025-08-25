@@ -199,7 +199,7 @@ class LineLexer {
 			return;
 		}
 
-		if (match = line.match(`^([ \t]*)${escape}(\\||!)(>*)${attributesRegexString}(?: .+)?$`)) {
+		if (match = line.match(`^([ \t]*)${escape}(\\||!)\\^?>*${attributesRegexString}(?: .+)?$`)) {
 			if (!match[2]) {
 				this.tokens.push({
 					type: 'LINE_WITH_TABLE_CELL_MARK',
