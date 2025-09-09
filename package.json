@@ -9,11 +9,18 @@
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "lint": "eslint . --ext .ts",
-    "test": "tsx test/check-parser-changes.ts"
+    "test": "tsx test/check-parser-changes.ts",
+    "prepare": "npm run build"
   },
   "bin": {
     "markfive": "./lib/cli.cjs"
   },
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "files": [
+    "lib"
+  ],
   "devDependencies": {
     "@guanghechen/rollup-plugin-copy": "^6.0.8",
     "@rollup/plugin-node-resolve": "^16.0.1",
