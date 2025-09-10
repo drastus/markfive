@@ -7,7 +7,7 @@ export default [
 		input: 'src/index.ts',
 		output: {
 			dir: 'lib',
-			format: 'cjs',
+			format: 'es',
 			sourcemap: true,
 		},
 		plugins: [typescript(), nodeResolve()],
@@ -16,7 +16,7 @@ export default [
 		input: 'src/scripts/notes.ts',
 		output: {
 			dir: 'lib',
-			format: 'cjs',
+			format: 'es',
 			sourcemap: true,
 		},
 		plugins: [typescript(), nodeResolve()],
@@ -25,9 +25,9 @@ export default [
 		input: 'src/cli.ts',
 		output: {
 			dir: 'lib',
-			format: 'cjs',
+			format: 'es',
 			sourcemap: true,
-			entryFileNames: '[name].cjs',
+			entryFileNames: '[name].js',
 		},
 		external: ['node:fs'],
 		plugins: [

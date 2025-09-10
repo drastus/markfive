@@ -13,7 +13,7 @@
     "prepare": "npm run build"
   },
   "bin": {
-    "markfive": "./lib/cli.cjs"
+    "markfive": "./lib/cli.js"
   },
   "exports": {
     ".": "./lib/index.js"
