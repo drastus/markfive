@@ -2,21 +2,14 @@
 
 import fs from 'node:fs';
 import Markfive from '.';
+import defaultOptions from './default-options';
 import {type Options} from './types';
 
 const args = process.argv;
 
 let input = '';
 
-const options: Options = {
-	tokens: false,
-	'line-ast': false,
-	ast: false,
-	debug: false,
-	'debug-tokens': false,
-	'no-typography': false,
-	preview: false,
-};
+const options = {...defaultOptions};
 
 args.forEach((arg) => {
 	if (arg.startsWith('--') && Object.keys(options).includes(arg.slice(2))) {

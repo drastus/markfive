@@ -1,3 +1,4 @@
+import defaultOptions from './default-options';
 import InlineParser from './inline-parser';
 import LineLexer from './line-lexer';
 import LineParser from './line-parser';
@@ -9,9 +10,9 @@ class Markfive {
 	source: string;
 	options: Options;
 
-	constructor(source: string, options: Options) {
+	constructor(source: string, options: Partial<Options> = {}) {
 		this.source = source;
-		this.options = options;
+		this.options = {...defaultOptions, ...options};
 	}
 
 	run = () => {
