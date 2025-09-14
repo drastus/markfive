@@ -22,6 +22,7 @@ const commonTokens: Array<{chars: string, type: InlineTokenType, position?: 'sta
 	{chars: '|]', type: 'BUTTON', position: 'end'},
 	{chars: '?[', type: 'SPAN', position: 'start'},
 	{chars: ']?', type: 'SPAN', position: 'end'},
+	{chars: '{{', type: 'VARIABLE', position: 'start'},
 	// 1 char
 	{chars: '#', type: 'B'},
 	{chars: '/', type: 'I'},
@@ -55,10 +56,12 @@ class InlineParser {
 	currentTable: Node | null = null;
 	currentTableRows: Array<Array<Node | null>> = [];
 	options: Options;
+	data: Record<string, string>;
 
-	constructor(source: Node, options: Options) {
+	constructor(source: Node, options: Options, data: Record<string, string>) {
 		this.ast = source;
 		this.options = options;
+		this.data = data;
 	}
 
 	parse = () => {
@@ -175,7 +178,7 @@ class InlineParser {
 					const prevIsWhitespace = /^(\p{Z})/u.test(content[startIndex - 1] ?? '');
 					const nextIsWhitespace = /^(\p{Z})/u.test(content[startIndex + consumedChars] ?? '');
 					if (
-						(prevIsAlphanumeric && nextIsAlphanumeric && !['SUP', 'SUB', 'KEY_JOINER', 'BUTTON_SEPARATOR', 'BR', 'WBR', 'BRACKET'].includes(type))
+						(prevIsAlphanumeric && nextIsAlphanumeric && !['SUP', 'SUB', 'KEY_JOINER', 'BUTTON_SEPARATOR', 'BR', 'WBR', 'BRACKET', 'VARIABLE'].includes(type))
 						|| (prevIsWhitespace && nextIsWhitespace && !['TD', 'TH'].includes(type))
 						|| ((prevIsAlphanumeric || nextIsAlphanumeric) && type === 'TH')
 					) {
@@ -229,6 +232,16 @@ class InlineParser {
 								newToken.attributes = match[4];
 								newToken.text += match[0];
 								consumedChars = 1 + match[0].length;
+							}
+						}
+						if (type === 'VARIABLE') {
+							match = contentRest.match(/^([A-Za-z][A-Za-z0-9_]+)}}/);
+							newToken.type = 'TEXT';
+							if (match?.[1]) {
+								newToken.text = this.data[match[1]] ?? '';
+								consumedChars += match[0].length;
+							} else {
+								newToken.text = chars;
 							}
 						}
 

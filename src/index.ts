@@ -9,10 +9,12 @@ import {type Options} from './types';
 class Markfive {
 	source: string;
 	options: Options;
+	data: Record<string, string>;
 
-	constructor(source: string, options: Partial<Options> = {}) {
+	constructor(source: string, options: Partial<Options> = {}, data: Record<string, string> = {}) {
 		this.source = source;
 		this.options = {...defaultOptions, ...options};
+		this.data = data;
 	}
 
 	run = () => {
@@ -24,7 +26,7 @@ class Markfive {
 			let ast = lineParser.parse();
 
 			if (!this.options['line-ast']) {
-				const inlineParser = new InlineParser(ast, this.options);
+				const inlineParser = new InlineParser(ast, this.options, this.data);
 				ast = inlineParser.parse();
 
 				if (!this.options['no-typography']) {
@@ -40,9 +42,11 @@ class Markfive {
 						result = renderer.preview(result);
 					}
 					process.stdout.write(result);
+					return result;
 				}
 			}
 		}
+		return '';
 	};
 }
 

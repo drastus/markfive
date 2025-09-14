@@ -98,6 +98,7 @@ export type InlineTokenType =
 	| 'SPAN'
 	| 'BR'
 	| 'WBR'
+	| 'VARIABLE'
 	| 'INLINE_OTHER';
 
 export type InlineNodeType =

@@ -10,10 +10,16 @@ const args = process.argv;
 let input = '';
 
 const options = {...defaultOptions};
+const data: Record<string, string> = {};
 
 args.forEach((arg) => {
-	if (arg.startsWith('--') && Object.keys(options).includes(arg.slice(2))) {
-		options[arg.slice(2) as keyof Options] = true;
+	if (arg.startsWith('--')) {
+		if (Object.keys(options).includes(arg.slice(2))) {
+			options[arg.slice(2) as keyof Options] = true;
+		} else if (arg.slice(2).includes('=')) {
+			const [key, value] = arg.slice(2).split('=');
+			data[key ?? ''] = value ?? '';
+		}
 	}
 });
 if (options['debug-tokens']) {
@@ -27,5 +33,5 @@ try {
 	process.exit(1);
 }
 
-const markfive = new Markfive(input, options);
+const markfive = new Markfive(input, options, data);
 markfive.run();
