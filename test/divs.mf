@@ -10,6 +10,11 @@
 
 Some other paragraph that has a text with ?[span]?{.span}.
 
+??{.div}
+	\-
+
+Paragraph.
+
 {.div}
 
 Here ?[external span includes ?[internal span]?{#spanint}]?{#spanext}.

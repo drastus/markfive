@@ -16,6 +16,15 @@ class LineLexer {
 		this.options = options;
 	}
 
+	addTextToken = (line: string, indentMatch = '', escapeMatch = '') => {
+		const escaped = escapeMatch !== '';
+		this.tokens.push({
+			type: 'TEXT_LINE',
+			line: line.trimStart().slice(escaped ? 1 : 0),
+			indent: calculateIndent(indentMatch),
+		});
+	};
+
 	tokenize = () => {
 		if (this.options.debug) console.log('LineLexer tokenize\n');
 
@@ -37,11 +46,11 @@ class LineLexer {
 			return;
 		}
 
-		if (match = line.match(`^[\t ]*${escape}\\* \\* \\*$`)) {
-			if (!match[1]) {
+		if (match = line.match(`^([\t ]*)${escape}\\* \\* \\*$`)) {
+			if (!match[2]) {
 				this.tokens.push({type: 'LINE_WITH_SEPARATOR_MARK', line});
 			} else {
-				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[1] ? 1 : 0)});
+				this.addTextToken(line, match[1], match[2]);
 			}
 			return;
 		}
@@ -58,7 +67,7 @@ class LineLexer {
 						text: this.lines[this.current - 1]!.trimStart(),
 					});
 				} else {
-					this.tokens.push({type: 'TEXT_LINE', line: line.slice(match[1] ? 1 : 0)});
+					this.addTextToken(line, '', match[1]);
 				}
 				return;
 			}
@@ -73,7 +82,7 @@ class LineLexer {
 					attributes: match[3],
 				});
 			} else {
-				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+				this.addTextToken(line, match[1], match[2]);
 			}
 			return;
 		}
@@ -89,7 +98,7 @@ class LineLexer {
 					text: match[5],
 				});
 			} else {
-				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+				this.addTextToken(line, match[1], match[2]);
 			}
 			return;
 		}
@@ -105,7 +114,7 @@ class LineLexer {
 					text: match[5],
 				});
 			} else {
-				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+				this.addTextToken(line, match[1], match[2]);
 			}
 			return;
 		}
@@ -120,7 +129,7 @@ class LineLexer {
 					text: match[4],
 				});
 			} else {
-				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+				this.addTextToken(line, match[1], match[2]);
 			}
 			return;
 		}
@@ -135,7 +144,7 @@ class LineLexer {
 					text: match[4],
 				});
 			} else {
-				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+				this.addTextToken(line, match[1], match[2]);
 			}
 			return;
 		}
@@ -150,7 +159,7 @@ class LineLexer {
 					text: match[4],
 				});
 			} else {
-				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+				this.addTextToken(line, match[1], match[2]);
 			}
 			return;
 		}
@@ -165,7 +174,7 @@ class LineLexer {
 					text: match[4],
 				});
 			} else {
-				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+				this.addTextToken(line, match[1], match[2]);
 			}
 			return;
 		}
@@ -180,7 +189,7 @@ class LineLexer {
 					text: match[4],
 				});
 			} else {
-				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+				this.addTextToken(line, match[1], match[2]);
 			}
 			return;
 		}
@@ -194,7 +203,7 @@ class LineLexer {
 					attributes: match[3],
 				});
 			} else {
-				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+				this.addTextToken(line, match[1], match[2]);
 			}
 			return;
 		}
@@ -208,7 +217,7 @@ class LineLexer {
 					text: line,
 				});
 			} else {
-				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+				this.addTextToken(line, match[1], match[2]);
 			}
 			return;
 		}
@@ -222,7 +231,7 @@ class LineLexer {
 					text: match[3],
 				});
 			} else {
-				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+				this.addTextToken(line, match[1], match[2]);
 			}
 			return;
 		}
@@ -247,7 +256,7 @@ class LineLexer {
 					attributes: match[4],
 				});
 			} else {
-				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+				this.addTextToken(line, match[1], match[2]);
 			}
 			return;
 		}
@@ -261,7 +270,7 @@ class LineLexer {
 					text: match[3],
 				});
 			} else {
-				this.tokens.push({type: 'TEXT_LINE', line: line.trimStart().slice(match[2] ? 1 : 0)});
+				this.addTextToken(line, match[1], match[2]);
 			}
 			return;
 		}
