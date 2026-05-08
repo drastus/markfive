@@ -16,7 +16,10 @@
     "markfive": "./lib/cli.js"
   },
   "exports": {
-    ".": "./lib/index.js"
+    ".": {
+      "types": "./lib/src/index.d.ts",
+      "default": "./lib/index.js"
+    }
   },
   "files": [
     "lib"

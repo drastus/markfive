@@ -10,7 +10,10 @@ export default [
 			format: 'es',
 			sourcemap: true,
 		},
-		plugins: [typescript(), nodeResolve()],
+		plugins: [typescript({
+			declarationDir: 'lib',
+			declaration: true,
+		}), nodeResolve()],
 	},
 	{
 		input: 'src/scripts/notes.ts',
@@ -19,7 +22,10 @@ export default [
 			format: 'es',
 			sourcemap: true,
 		},
-		plugins: [typescript(), nodeResolve()],
+		plugins: [typescript({
+			declarationDir: 'lib',
+			declaration: true,
+		}), nodeResolve()],
 	},
 	{
 		input: 'src/cli.ts',
@@ -31,7 +37,10 @@ export default [
 		},
 		external: ['node:fs'],
 		plugins: [
-			typescript(),
+			typescript({
+				declarationDir: 'lib',
+				declaration: true,
+			}),
 			nodeResolve(),
 			copy({
 				targets: [
