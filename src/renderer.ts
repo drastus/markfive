@@ -199,6 +199,23 @@ class Renderer {
 		if (node.type === 'KEY_JOINER') {
 			return '<span class="mf-key-joiner">+</span>';
 		}
+		if (node.type === 'KBD') {
+			const hasKeyChildren = node.children.some((child: Node) => child.type === 'KEY');
+			const hasButtonChildren = node.children.some((child: Node) => child.type === 'BUTTON');
+			const attributes = stringifyAttributes({
+				...node.attributes,
+				class: [
+					...((node.attributes?.class as string[] | undefined) ?? []),
+					...(hasKeyChildren ? ['mf-keys'] : []),
+					...(hasButtonChildren ? ['mf-buttons'] : []),
+				],
+			});
+			let string = `<kbd${attributes}>`;
+			node.children.forEach((child: Node) => {
+				string += this.renderNode(child);
+			});
+			return `${string}</kbd>`;
+		}
 		if (node.type === 'BUTTON') {
 			const attributes = stringifyAttributes({
 				...node.attributes,

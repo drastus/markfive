@@ -44,8 +44,15 @@ export const stringifyAttributes = (attributes?: Record<string, string | string[
 	let string = '';
 	if (!attributes) return string;
 	for (const [attributeName, attributeValue] of Object.entries(attributes)) {
-		const value = Array.isArray(attributeValue) ? attributeValue.join(' ') : attributeValue;
-		string += ` ${attributeName}="${value}"`;
+		let value: string | number | undefined;
+		if (Array.isArray(attributeValue)) {
+			value = attributeValue.length > 0 ? attributeValue.join(' ') : undefined;
+		} else {
+			value = String(attributeValue);
+		}
+		if (value !== undefined) {
+			string += ` ${attributeName}="${value}"`;
+		}
 	}
 	return string;
 };
