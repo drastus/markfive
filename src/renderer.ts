@@ -286,7 +286,7 @@ class Renderer {
 
 		this.newlineMode = 'br';
 		this.newlineRequired = false;
-		if (node.children.length > 0) {
+		if (node.children.length > 0 || node.type === 'DIV') {
 			let string = `<${elementType}${stringifyAttributes(node.attributes)}>`;
 			if (mainBlockElements.includes(elementType)) string += '\n';
 			node.children.forEach((child: Node) => {

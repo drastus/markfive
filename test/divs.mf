@@ -13,10 +13,12 @@ Some other paragraph that has a text with ?[span]?{.span}.
 ??{.div}
 	\-
 
+??{.empty-div}
+
 Paragraph.
 
 {.div}
 
 Here ?[external span includes ?[internal span]?{#spanint}]?{#spanext}.
 
-??{.one-liner} One-line div (not supported).
+??{.one-liner} One-line div.

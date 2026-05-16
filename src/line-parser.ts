@@ -445,13 +445,21 @@ class LineParser {
 		}
 
 		if (token.type === 'LINE_WITH_DIV_MARK') {
-			if ((this.tokens[this.current + 1]?.indent ?? 0) > (token.indent ?? 0)) {
+			if ((this.tokens[this.current + 1]?.indent ?? 0) > (token.indent ?? 0) || this.tokens[this.current + 1]?.type === 'EMPTY_LINE') {
 				this.addNode(
 					new BlockNode('DIV', {
 						attributes: parseAttributes(token.attributes),
 					}),
 					token.indent,
 				);
+				if (this.tokens[this.current + 1]?.type === 'EMPTY_LINE') {
+					if (token.text) {
+						this.addNode(
+							new BlockNode('LINE', {content: token.text}),
+						)
+					}
+					this.indentStack.pop();
+				}
 			} else {
 				this.addTextNode(token);
 			}
