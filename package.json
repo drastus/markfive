@@ -28,7 +28,7 @@
     "@guanghechen/rollup-plugin-copy": "^6.0.8",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-typescript": "^12.1.4",
-    "@types/node": "^24.0.8",
+    "@types/node": "^24.12.4",
     "@typescript-eslint/eslint-plugin": "^7.3.1",
     "@typescript-eslint/parser": "^7.3.1",
     "eslint": "^8.57.0",

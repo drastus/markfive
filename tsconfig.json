@@ -10,14 +10,15 @@
 			"DOM.Iterable",
 			"ScriptHost"
 		],
-		"module": "ESNext",
+		"module": "esnext",
 		"moduleResolution": "node",
 		"noUncheckedIndexedAccess": true,
 		"outDir": "./lib",
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"target": "ES6"
+		"target": "ES6",
+		"types": ["node"]
 	},
 	"compileOnSave": true
 }

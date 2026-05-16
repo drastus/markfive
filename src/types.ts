@@ -9,6 +9,7 @@ export type Options = {
 	'debug-tokens': boolean,
 	'no-typography': boolean,
 	preview: boolean,
+	print: boolean,
 };
 
 export type LineTokenType =

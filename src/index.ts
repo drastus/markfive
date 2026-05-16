@@ -41,7 +41,9 @@ class Markfive {
 					if (this.options.preview) {
 						result = renderer.preview(result);
 					}
-					process.stdout.write(result);
+					if (this.options.print) {
+						process.stdout.write(result);
+					}
 					return result;
 				}
 			}

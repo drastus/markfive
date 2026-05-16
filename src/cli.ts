@@ -9,7 +9,7 @@ const args = process.argv;
 
 let input = '';
 
-const options = {...defaultOptions};
+const options = {...defaultOptions, print: true};
 const data: Record<string, string> = {};
 
 args.forEach((arg) => {

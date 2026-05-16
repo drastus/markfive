@@ -8,6 +8,7 @@ const defaultOptions: Options = {
 	'debug-tokens': false,
 	'no-typography': false,
 	preview: false,
+	print: false,
 };
 
 export default defaultOptions;
