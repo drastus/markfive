@@ -4,3 +4,5 @@ lib
 .megaignore
 test/*.html
 !test/*.part.html
+/*.md
+!README.md

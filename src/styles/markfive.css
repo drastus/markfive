@@ -75,3 +75,41 @@ kbd samp {
 .mf-tooltip .mf-note-backref {
 	display: none;
 }
+
+@media (prefers-color-scheme: dark) {
+	body {
+		color: #eee;
+		background-color: #111;
+	}
+
+	samp {
+		color: #bbb;
+	}
+
+	kbd samp {
+		color: #eee;
+	}
+
+	.mf-key {
+		border-color: #555;
+	}
+
+	.mf-button {
+		border-color: #555;
+		background-color: #333;
+	}
+
+	.mf-button:hover {
+		background-color: #555;
+	}
+
+	.mf-button-separator {
+		color: #555;
+	}
+
+	.mf-tooltip {
+		background-color: #222;
+		border-color: #555;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+	}
+}
