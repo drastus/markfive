@@ -9,6 +9,7 @@ const defaultOptions: Options = {
 	'no-typography': false,
 	preview: false,
 	print: false,
+	'heading-shift': 0,
 };
 
 export default defaultOptions;

@@ -10,6 +10,7 @@ export type Options = {
 	'no-typography': boolean,
 	preview: boolean,
 	print: boolean,
+	'heading-shift': number,
 };
 
 export type LineTokenType =

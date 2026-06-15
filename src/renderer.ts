@@ -118,8 +118,8 @@ class Renderer {
 			return string;
 		}
 		if (node.type === 'HEADING') {
-			elementType = `h${node.subtype}`;
-			const currentHeadingLevel = Number(node.subtype);
+			const currentHeadingLevel = Math.min(Number(node.subtype) + this.options['heading-shift'], 6);
+			elementType = `h${currentHeadingLevel}`;
 
 			let string = '';
 			while (this.headingsStack.length > 0 && this.headingsStack.at(-1)! >= currentHeadingLevel) {
