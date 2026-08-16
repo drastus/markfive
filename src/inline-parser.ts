@@ -421,8 +421,12 @@ class InlineParser {
 				if (rowspan) {
 					let originCell: Node | null = null;
 					let i = 2;
-					while (originCell === null && this.currentTableRows[this.currentTableRows.length - i]) {
-						originCell = this.currentTableRows[this.currentTableRows.length - i]?.[currentCellIndex] ?? null;
+					while (this.currentTableRows[this.currentTableRows.length - i]) {
+						const candidate = this.currentTableRows[this.currentTableRows.length - i]?.[currentCellIndex] ?? null;
+						if (candidate && !candidate.attributes?.['data-in-rowspan']) {
+							originCell = candidate;
+							break;
+						}
 						i++;
 					}
 					if (originCell) {

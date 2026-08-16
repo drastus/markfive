@@ -17,7 +17,8 @@ Simple table with colspan and rowspan
 | John       | Doe       | 400
 | Bob        | Smith     | 600
 |^           |^  p.v.    | 400
-|> Total                 | 1400
+|^           |^  more    | 200
+|> Total                 | 1600
 
 
 Complex tables
