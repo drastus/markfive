@@ -163,7 +163,7 @@ class LineParser {
 			const activeNode = this.activeNode();
 			if (activeNode.type === 'TABLE') {
 				this.indentStack.pop();
-			} else if (activeNode.type === 'TABLE_ROW') {
+			} else if (['TABLE_ROW', 'EXPLICIT_TABLE_ROW'].includes(activeNode.type)) {
 				this.indentStack.pop();
 				this.indentStack.pop();
 			} else if (activeNode.type === 'BLOCK_CODE') {
