@@ -360,9 +360,15 @@ of code:
 | `1600 x 900`       | `1600 × 900`                            |
 | `<<text>>`         | `«text»`                                |
 | `<text>`           | `‹text›`                                |
+| `[<u, v>]`         | `⟨u, v⟩` (angle brackets)               |
+
+Angle brackets take precedence over `<samp<` and `>kbd>` markers, and their
+content can be formatted: `[<*A*>]`. A link whose text starts with `<` must
+escape it: `[\<b>](https://example.com)`.
 
 The language is taken from the nearest `lang` attribute (English by default),
-e.g. `"text"` becomes `“text”` in English and `„text“` with `{lang=de}`. For
+e.g. `"text"` becomes `“text”` in English, `„text”` with `{lang=pl}` and
+`„text“` with `{lang=de}`. For
 French, narrow no-break spaces are added before `?`, `!`, `:` and inside guillemets.
 
 Escaping

@@ -6,7 +6,7 @@ const langSubtag = (lang: string): string => lang.split('-')[0]!;
 
 const doubleQuotes: Record<'standard' | 'low' | 'lowReversed' | 'right', [string, string]> = {
 	standard: ['“', '”'],
-	low: ['„', '“'],
+	low: ['„', '”'],
 	lowReversed: ['„', '“'],
 	right: ['”', '”'],
 };
@@ -215,16 +215,16 @@ class Typography {
 			} else if (char === '>' && text[index + 1] === '>') {
 				modifiedText += `${usesSpacing(lang) && !prevIsWhitespace ? ' ' : ''}»`;
 				index += 1;
-			} else if (char === '<' && (hasReversedSingleGuillemets(lang) ? !nextIsAlphanumeric : !prevIsAlphanumeric)) {
-				modifiedText += `‹${usesSpacing(lang) && !nextIsWhitespace ? ' ' : ''}`;
-			} else if (char === '>' && (hasReversedSingleGuillemets(lang) ? !prevIsAlphanumeric : !nextIsAlphanumeric)) {
-				modifiedText += `${usesSpacing(lang) && !prevIsWhitespace ? ' ' : ''}›`;
 			} else if (char === '[' && text[index + 1] === '<') {
 				modifiedText += '⟨';
 				index += 1;
 			} else if (char === '>' && text[index + 1] === ']') {
 				modifiedText += '⟩';
 				index += 1;
+			} else if (char === '<' && (hasReversedSingleGuillemets(lang) ? !nextIsAlphanumeric : !prevIsAlphanumeric)) {
+				modifiedText += `‹${usesSpacing(lang) && !nextIsWhitespace ? ' ' : ''}`;
+			} else if (char === '>' && (hasReversedSingleGuillemets(lang) ? !prevIsAlphanumeric : !nextIsAlphanumeric)) {
+				modifiedText += `${usesSpacing(lang) && !prevIsWhitespace ? ' ' : ''}›`;
 			} else if (char === '?' && usesSpacing(lang) && !prevIsWhitespace) {
 				modifiedText += ' ?';
 			} else if (char === '!' && usesSpacing(lang) && !prevIsWhitespace) {

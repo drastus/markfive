@@ -23,6 +23,8 @@ const commonTokens: Array<{chars: string, type: InlineTokenType, position?: 'sta
 	{chars: '?[', type: 'SPAN', position: 'start'},
 	{chars: ']?', type: 'SPAN', position: 'end'},
 	{chars: '{{', type: 'VARIABLE', position: 'start'},
+	{chars: '[<', type: 'TEXT'}, // angle brackets, handled by typography
+	{chars: '>]', type: 'TEXT'},
 	// 1 char
 	{chars: '#', type: 'B'},
 	{chars: '/', type: 'I'},
@@ -153,6 +155,9 @@ class InlineParser {
 					if (type === 'INLINE_OTHER' && !inlineOtherElements.some((e) => `${e}[` === content.slice(startIndex + 1, startIndex + e.length + 2))) {
 						continue;
 					}
+					if ((chars === '[<' && content[startIndex - 1] === '[') || (chars === '>]' && [']', '('].includes(content[startIndex + 2] ?? ''))) {
+						continue; // [[<]] and [[>]] keys, [\<link text>](url)
+					}
 
 					consumedChars = chars.length;
 
@@ -171,6 +176,11 @@ class InlineParser {
 						this.addTextToken(tokens, content.slice(index, startIndex - Math.floor(backslashesSequenceLength / 2)));
 					} else if (nextSpecialCharIndex > 0) {
 						this.addTextToken(tokens, content.slice(index, startIndex));
+					}
+
+					if (type === 'TEXT') {
+						this.addTextToken(tokens, chars);
+						break;
 					}
 
 					const prevIsAlphanumeric = /^(\p{L}|\p{M}|\p{N})/u.test(content[startIndex - 1] ?? '');

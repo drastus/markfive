@@ -19,3 +19,5 @@ I recall her saying: "He wrote: 'My height is 5' 12''', so I asked him to conver
 For ages 3--5.
 
 -15
+
+The inner product [<u, v>] and the expectation value [<*A*>].
