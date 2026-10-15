@@ -68,7 +68,7 @@ class LineParser {
 		} else if (this.prevToken().type === 'LINE_WITH_BLOCK_OTHER_MARK' && this.prevToken().marker !== 'pre') {
 			return true;
 		} else if (this.prevToken().type === 'LINE_WITH_ATTRIBUTES') {
-			if (this.tokens[this.current - 2]!.type === 'EMPTY_LINE' || this.tokens[this.current - 2] === undefined) {
+			if (this.tokens[this.current - 2] === undefined || this.tokens[this.current - 2]!.type === 'EMPTY_LINE') {
 				return true;
 			}
 		}
