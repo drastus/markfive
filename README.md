@@ -385,6 +385,25 @@ marker:
 Use `\\` for a literal backslash followed by a working marker.
 
 
+Installation
+============
+
+Install dependencies (this also builds the project into `lib/`):
+
+	npm install
+
+Make the `markfive` command available on `PATH`:
+
+	npm link
+
+The command points to `lib/cli.js` in the working copy, so every rebuild takes
+effect immediately. When using nvm, the link belongs to the current Node
+version – run `npm link` again after switching versions. To remove the
+command:
+
+	npm unlink -g markfive
+
+
 Usage
 =====
 

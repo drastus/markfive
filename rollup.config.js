@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import copy from '@guanghechen/rollup-plugin-copy';
 import typescript from '@rollup/plugin-typescript';
 import {nodeResolve} from '@rollup/plugin-node-resolve';
@@ -56,6 +57,12 @@ export default [
 					{src: 'src/styles/markfive.css', dest: 'lib'},
 				],
 			}),
+			{
+				name: 'make-cli-executable',
+				writeBundle() {
+					fs.chmodSync('lib/cli.js', 0o755);
+				},
+			},
 		],
 	},
 ];
