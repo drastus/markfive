@@ -50,7 +50,7 @@ const tableRowTokens: Array<{chars: string, type: InlineTokenType}> = [
 ];
 
 const selfNestableTokenTypes = ['EM', 'STRONG', 'MARK', 'SPAN'];
-const inlineOtherElements = ['abbr', 'bdi', 'data', 'del', 'ins', 'rt', 'ruby', 'small', 'time'];
+const inlineOtherElements = ['abbr', 'bdi', 'bdo', 'data', 'del', 'ins', 'rt', 'ruby', 'small', 'time'];
 
 class InlineParser {
 	ast: Node;

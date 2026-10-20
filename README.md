@@ -144,13 +144,14 @@ Other inline HTML elements are written as `@element[content]`:
 	@small[fine print]
 	@del[removed] @ins[added]
 	@bdi[user name]
+	@bdo[reversed](rtl)
 	@ruby[漢 @rt[kan]]
 	@time[today](2025-07-30)
 	@data[five](5)
 
-Supported elements are `abbr`, `bdi`, `data`, `del`, `ins`, `rt`, `ruby`,
-`small` and `time`. For `time` and `data` the value in parentheses becomes the
-`datetime` and `value` attribute respectively.
+Supported elements are `abbr`, `bdi`, `bdo`, `data`, `del`, `ins`, `rt`,
+`ruby`, `small` and `time`. For `bdo`, `time` and `data` the value in
+parentheses becomes the `dir`, `datetime` and `value` attribute respectively.
 
 Links and images
 ----------------

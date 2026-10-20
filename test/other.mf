@@ -10,6 +10,8 @@
 
 	Here is some ruby: @ruby[base @rt[ruby text]].
 
+	Here is some reversed text: @bdo[reversed](rtl).
+
 	@pre
 		Pre        formatted      text
 		some          other
