@@ -39,3 +39,16 @@ npm start</kbd></pre>
  8   *  *  *
  9   *  *  *
 10   *  *  *</samp></pre>
+<p>Markup is not parsed in code blocks:</p>
+<pre><code>x_y_z = *a* + /b/ -- "c" ... \*d\* {{page}} https://example.com/
+</code></pre>
+<pre><kbd>grep -E "a_b_c|*x*" --color ~/notes/ https://example.com/</kbd></pre>
+<pre><samp>"quoted" -- 3...5 #bold# \escaped</samp></pre>
+<p>Markup is not parsed in inline code: <code>x_y_z = *a* + /b/ -- "c" $x$ {{page}} https://example.com/</code>.</p>
+<p>Backslashes in inline code are literal: <code>x\*y</code>, <code>C:\Users\</code>, except before a backtick: <code>a ` b</code>.</p>
+<p>Bracketed inside a word: java<code>script</code> and <code>co</code>de, but not elsewhere: <code>[1, 2]</code> and <code class="language-js">[x]</code>.</p>
+<p>Pipe in a table cell:</p>
+<table>
+<tr>
+<td><code>a|b</code></td><td>c</td></tr>
+</table>

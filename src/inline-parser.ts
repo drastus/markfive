@@ -51,7 +51,8 @@ const tableRowTokens: Array<{chars: string, type: InlineTokenType}> = [
 
 const selfNestableTokenTypes = ['EM', 'STRONG', 'MARK', 'SPAN'];
 const inlineOtherElements = ['abbr', 'bdi', 'bdo', 'data', 'del', 'ins', 'rt', 'ruby', 'small', 'time'];
-const nonAutolinkingNodeTypes = ['A', 'CODE', 'KBD', 'SAMP', 'BLOCK_CODE', 'BLOCK_KBD', 'BLOCK_SAMP'];
+const nonAutolinkingNodeTypes = ['A', 'KBD', 'SAMP'];
+const verbatimNodeTypes = ['BLOCK_CODE', 'BLOCK_KBD', 'BLOCK_SAMP'];
 
 class InlineParser {
 	ast: Node;
@@ -78,6 +79,13 @@ class InlineParser {
 	};
 
 	parseNode = (node: Node) => {
+		if (verbatimNodeTypes.includes(node.type)) {
+			node.children.forEach((line) => {
+				if (line.content) line.children = [new InlineNode('TEXT', {content: line.content})];
+				line.content = undefined;
+			});
+			return;
+		}
 		const suppressesAutolinks = nonAutolinkingNodeTypes.includes(node.type);
 		if (suppressesAutolinks) this.autolinkSuppressionDepth++;
 		if (node.type === 'TABLE') {
@@ -150,6 +158,63 @@ class InlineParser {
 			attributes: match?.[1],
 		});
 		return urlEndIndex + (match?.[0].length ?? 0);
+	};
+
+	isInlineCodeEnd = (content: string, index: number) => {
+		const prevIsAlphanumeric = /^(\p{L}|\p{M}|\p{N})/u.test(content[index - 1] ?? '');
+		const nextIsAlphanumeric = /^(\p{L}|\p{M}|\p{N})/u.test(content[index + 1] ?? '');
+		const prevIsWhitespace = /^(\p{Z})/u.test(content[index - 1] ?? '');
+		const nextIsWhitespace = /^(\p{Z})/u.test(content[index + 1] ?? '');
+		if ((prevIsAlphanumeric && nextIsAlphanumeric) || (prevIsWhitespace && nextIsWhitespace)) return false;
+		return (!nextIsAlphanumeric && !prevIsWhitespace) || content[index - 1] === ']';
+	};
+
+	// inline code content is verbatim, only a backslash before a backtick works as an escape;
+	// returns the index right after the closing backtick (and its attributes)
+	addInlineCodeTokens = (tokens: InlineToken[], content: string, from: number) => {
+		let text = '';
+		let index = from;
+		while (index < content.length) {
+			if (content[index] === '\\') {
+				let backslashesSequenceLength = 0;
+				while (content[index + backslashesSequenceLength] === '\\') {
+					backslashesSequenceLength++;
+				}
+				if (content[index + backslashesSequenceLength] === '`') {
+					text += '\\'.repeat(Math.floor(backslashesSequenceLength / 2));
+					index += backslashesSequenceLength;
+					if (backslashesSequenceLength % 2 === 1) {
+						text += '`';
+						index++;
+					}
+				} else {
+					text += content.slice(index, index + backslashesSequenceLength);
+					index += backslashesSequenceLength;
+				}
+				continue;
+			}
+			if (content[index] === '`' && this.isInlineCodeEnd(content, index)) {
+				if (text === '') return undefined;
+				// brackets delimit the code only inside a word, e.g. java`[script]`, otherwise they are part of it
+				const isInsideWord = /^(\p{L}|\p{M}|\p{N})/u.test(content[from - 2] ?? '')
+					|| /^(\p{L}|\p{M}|\p{N})/u.test(content[index + 1] ?? '');
+				if (isInsideWord && text.length > 1 && text.startsWith('[') && text.endsWith(']')) {
+					tokens.push(
+						{type: 'BRACKET', positions: new Set(['start']), text: '['},
+						{type: 'TEXT', text: text.slice(1, -1)},
+						{type: 'BRACKET', positions: new Set(['end']), text: ']'},
+					);
+				} else {
+					tokens.push({type: 'TEXT', text});
+				}
+				const match = content.slice(index + 1).match(`^${attributesRegexString}`);
+				tokens.push({type: 'CODE', positions: new Set(['end']), text: '`', attributes: match?.[1]});
+				return index + 1 + (match?.[0].length ?? 0);
+			}
+			text += content[index];
+			index++;
+		}
+		return undefined;
 	};
 
 	getNodeTokens = (content: string, type: BlockNodeType) => {
@@ -291,6 +356,10 @@ class InlineParser {
 						}
 
 						tokens.push(newToken);
+						if (type === 'CODE' && positions.has('start')) {
+							const codeEndIndex = this.addInlineCodeTokens(tokens, content, startIndex + consumedChars);
+							if (codeEndIndex !== undefined) consumedChars = codeEndIndex - startIndex;
+						}
 					}
 					break;
 				}

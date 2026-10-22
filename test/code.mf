@@ -50,3 +50,21 @@ Choose [|File|Save as...|] command.
 <  8   *  *  *
 <  9   *  *  *
 < 10   *  *  *
+
+Markup is not parsed in code blocks:
+``
+	x_y_z = *a* + /b/ -- "c" ... \*d\* {{page}} https://example.com/
+
+> grep -E "a_b_c|*x*" --color ~/notes/ https://example.com/
+
+< "quoted" -- 3...5 #bold# \escaped
+
+Markup is not parsed in inline code: `x_y_z = *a* + /b/ -- "c" $x$ {{page}} https://example.com/`.
+
+Backslashes in inline code are literal: `x\*y`, `C:\Users\\`, except before a backtick: `a \` b`.
+
+Bracketed inside a word: java`[script]` and `[co]`de, but not elsewhere: `[1, 2]` and `[x]`{.language-js}.
+
+Pipe in a table cell:
+
+| `a|b` | c

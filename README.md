@@ -257,6 +257,14 @@ starting with `<` a sample output block (`<pre><samp>`):
 
 	< added 42 packages in 2s
 
+The content of all three blocks is verbatim: markup, variables, escapes and
+typography are not processed.
+
+Inline code (`` `code` ``) is verbatim too. A backslash in it is literal, except
+before a backtick: `` `a \` b` `` contains a backtick and `` `C:\\` `` ends with
+a single backslash. Brackets around inline code are removed only inside a word
+(``java`[script]` ``); elsewhere they are part of the code (`` `[1, 2]` ``).
+
 Divs and other blocks
 ---------------------
 
