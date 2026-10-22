@@ -107,6 +107,65 @@ export const trimAndJoin = (array: string[]) => array
 	.map((item) => item.trim())
 	.join('\n');
 
+export const variableNameRegexString = '[A-Za-z][A-Za-z0-9_]+';
+const variableRegexString = `\\{\\{${variableNameRegexString}\\}\\}`;
+const urlCharRegexString = `(?:[^\\s<>{}|]|${variableRegexString})`;
+// a URL starts with a scheme or with a variable (whose value is checked later)
+const urlRegex = new RegExp(
+	`(?<![\\p{L}\\p{N}])(?:(?:(?:https?|ftp)://|mailto:)${urlCharRegexString}+|${variableRegexString}${urlCharRegexString}*)`,
+	'gu',
+);
+const urlValidRegex = /^(?:(?:https?|ftp):\/\/|mailto:)[^\s<>"]+$/u;
+const urlTrailingPunctuationRegex = /[.,;:!?'"`*_~=#]+$/u;
+const urlClosingBrackets: Record<string, string> = {')': '(', ']': '['};
+const urlWrappingMarkers = ['/', '--'];
+
+// cuts the URL at the first unbalanced closing bracket and strips trailing punctuation
+const trimUrl = (url: string) => {
+	const depths: Record<string, number> = {'(': 0, '[': 0};
+	let end = url.length;
+	for (let i = 0; i < url.length; i++) {
+		const char = url[i]!;
+		if (char in depths) {
+			depths[char]!++;
+		} else if (char in urlClosingBrackets) {
+			const opening = urlClosingBrackets[char]!;
+			if (depths[opening] === 0) {
+				end = i;
+				break;
+			}
+			depths[opening]!--;
+		}
+	}
+	return url.slice(0, end).replace(urlTrailingPunctuationRegex, '');
+};
+
+// strips a closing marker matching an opening one right before the URL, e.g. /https://example.com/
+const stripWrappingMarker = (url: string, textBefore: string) => {
+	for (const marker of urlWrappingMarkers) {
+		if (url.endsWith(marker) && textBefore.endsWith(marker)
+			&& !/[\p{L}\p{M}\p{N}\\]$/u.test(textBefore.slice(0, -marker.length))
+		) {
+			return url.slice(0, -marker.length);
+		}
+	}
+	return url;
+};
+
+// returns the URL with variables replaced and the length of its source
+export const findUrl = (text: string, from: number, data: Record<string, string>) => {
+	urlRegex.lastIndex = from;
+	let match: RegExpExecArray | null = null;
+	while (match = urlRegex.exec(text)) {
+		const textBefore = text.slice(Math.max(0, match.index - 3), match.index);
+		const source = stripWrappingMarker(trimUrl(match[0]), textBefore);
+		const url = source.replace(new RegExp(variableRegexString, 'g'), (variable) => data[variable.slice(2, -2)] ?? '');
+		if (urlValidRegex.test(url)) return {index: match.index, length: source.length, text: url};
+		urlRegex.lastIndex = match.index + 1;
+	}
+	return undefined;
+};
+
 export const createHeadingRef = (text: string) => text.toLowerCase()
 	.replace(/\{\/\}/gu, '_')
 	.replace(/\s+/gu, '_')

@@ -163,6 +163,16 @@ Links and images
 If the alt text of an image contains formatting, the image is rendered as
 `<object role="img">` with the formatted content as its fallback.
 
+Bare `http://`, `https://`, `ftp://` and `mailto:` URLs become links
+automatically and are never parsed for formatting or typography. Trailing
+punctuation and unbalanced closing brackets are not part of the URL. Attributes
+can follow the URL directly:
+
+	See https://example.com/{target=_blank}.
+
+Inside link text and code, URLs are kept as plain text. A backslash prevents
+linking: `\https://example.com/`.
+
 Notes
 -----
 

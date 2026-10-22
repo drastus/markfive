@@ -1,5 +1,5 @@
 import {execSync, spawnSync} from 'child_process';
-import {readdirSync, writeFileSync} from 'fs';
+import {existsSync, readFileSync, readdirSync, writeFileSync} from 'fs';
 import * as path from 'path';
 import {fileURLToPath} from 'url';
 
@@ -14,8 +14,11 @@ for (const mfFile of mfFiles) {
 	const base = mfFile.replace(/\.mf$/, '');
 	const mfPath = path.join(testDir, mfFile);
 	const outPath = path.join(testDir, `${base}.part.html`);
+	// Optional CLI arguments (e.g. variables) are read from a .args file next to the .mf file
+	const argsPath = path.join(testDir, `${base}.args`);
+	const args = existsSync(argsPath) ? readFileSync(argsPath, 'utf8').split(/\s+/).filter(Boolean) : [];
 	// Use spawnSync so errors are visible
-	const res = spawnSync('markfive', [mfPath], {encoding: 'utf8'});
+	const res = spawnSync('markfive', [...args, mfPath], {encoding: 'utf8'});
 	if (res.error) {
 		console.error(`Error running markfive on ${mfFile}:`, res.error);
 		process.exit(1);

@@ -146,6 +146,10 @@ class Renderer {
 		if (node.type === 'TEXT') {
 			return this.escapeHtml(node.content!);
 		}
+		if (node.type === 'URL') {
+			const text = this.escapeHtml(node.content!.replace(/&/g, '&amp;'));
+			return node.attributes?.href ? `<a${stringifyAttributes(node.attributes)}>${text}</a>` : text;
+		}
 		if (node.type === 'DESCRIPTION_LIST_ITEM') {
 			elementType = node.subtype === ':' ? 'dt' : 'dd';
 		}

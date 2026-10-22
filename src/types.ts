@@ -101,6 +101,7 @@ export type InlineTokenType =
 	| 'BR'
 	| 'WBR'
 	| 'VARIABLE'
+	| 'URL'
 	| 'INLINE_OTHER';
 
 export type InlineNodeType =
@@ -131,6 +132,7 @@ export type InlineNodeType =
 	| 'OBJECT'
 	| 'BR'
 	| 'WBR'
+	| 'URL'
 	| 'INLINE_OTHER';
 
 export type InlineToken = {

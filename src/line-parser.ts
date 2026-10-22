@@ -456,7 +456,7 @@ class LineParser {
 					if (token.text) {
 						this.addNode(
 							new BlockNode('LINE', {content: token.text}),
-						)
+						);
 					}
 					this.indentStack.pop();
 				}

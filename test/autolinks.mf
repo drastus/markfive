@@ -1,0 +1,47 @@
+Autolinks
+=========
+
+A URL with a trailing slash: https://example.com/.
+
+Markers inside paths: https://example.com/my_page_name and https://example.com/~user/a--b...
+
+Query string: https://example.com/search?q=a&copy=2.
+
+Two URLs on a line: https://a.example/ and https://b.example/ here.
+
+Trailing punctuation: https://example.com/page, (https://example.com/page) or "https://example.com/page"?
+
+Balanced parentheses: https://en.wikipedia.org/wiki/Markup_(computing).
+
+Inside formatting: *https://example.com/* and ~https://example.com/~.
+
+Other schemes: ftp://ftp.example.com/file.txt and mailto:me@example.com.
+
+With attributes: https://example.com/{target=_blank .external}.
+
+Escaped: \https://example.com/ is not a link, \\https://example.com/ is.
+
+In code: `https://example.com/a_b_c`.
+
+In link text: [https://example.com/](https://example.com/).
+
+In a note[*][Source: https://example.com/source.].
+
+| Site                  | Note
+| https://example.com/  | trailing slash
+
+``
+	https://example.com/
+
+> curl https://example.com/
+
+{lang=fr}
+Voir https://example.com/ : ici.
+
+Variables inside URLs: https://{{host}}/docs/ and https://example.com/{{page}}.
+
+A variable as a URL: {{site}}, and {{page}} which is not a URL.
+
+Wrapped in italics: /https://example.com/path/ and /https://example.com/path/, and struck out: --https://example.com/a--b--.
+
+Not wrapped: a/https://example.com/ and \/https://example.com/.

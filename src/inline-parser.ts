@@ -1,5 +1,5 @@
 import type BlockNode from './block-node';
-import {attributesRegexString, defaultAttributeRegexString, findCloseBracketIndexInRange, findIndexInRange, findIndicesInRange, parseAttributes} from './helpers';
+import {attributesRegexString, defaultAttributeRegexString, findCloseBracketIndexInRange, findIndexInRange, findIndicesInRange, findUrl, parseAttributes, variableNameRegexString} from './helpers';
 import InlineNode from './inline-node';
 import {markfiveMathToMathML} from './math-parser';
 import type {
@@ -51,10 +51,12 @@ const tableRowTokens: Array<{chars: string, type: InlineTokenType}> = [
 
 const selfNestableTokenTypes = ['EM', 'STRONG', 'MARK', 'SPAN'];
 const inlineOtherElements = ['abbr', 'bdi', 'bdo', 'data', 'del', 'ins', 'rt', 'ruby', 'small', 'time'];
+const nonAutolinkingNodeTypes = ['A', 'CODE', 'KBD', 'SAMP', 'BLOCK_CODE', 'BLOCK_KBD', 'BLOCK_SAMP'];
 
 class InlineParser {
 	ast: Node;
 	current = 0;
+	autolinkSuppressionDepth = 0;
 	currentTable: Node | null = null;
 	currentTableRows: Array<Array<Node | null>> = [];
 	options: Options;
@@ -76,6 +78,8 @@ class InlineParser {
 	};
 
 	parseNode = (node: Node) => {
+		const suppressesAutolinks = nonAutolinkingNodeTypes.includes(node.type);
+		if (suppressesAutolinks) this.autolinkSuppressionDepth++;
 		if (node.type === 'TABLE') {
 			this.currentTable = node;
 		}
@@ -87,12 +91,13 @@ class InlineParser {
 		}
 		if (node.children) {
 			node.children.forEach((child) => {
-				if (child.type !== 'TEXT') this.parseNode(child);
+				if (!['TEXT', 'URL'].includes(child.type)) this.parseNode(child);
 			});
 		}
 		if (node.type === 'TABLE') {
 			this.reparseCurrentTable();
 		}
+		if (suppressesAutolinks) this.autolinkSuppressionDepth--;
 	};
 
 	reparseCurrentTable = () => {
@@ -123,6 +128,30 @@ class InlineParser {
 		}
 	};
 
+	// returns the index right after the consumed URL (and its attributes)
+	addUrlToken = (tokens: InlineToken[], content: string, index: number, url: {index: number, length: number, text: string}) => {
+		let backslashesSequenceLength = 0;
+		while (url.index - 1 - backslashesSequenceLength >= index && content[url.index - 1 - backslashesSequenceLength] === '\\') {
+			backslashesSequenceLength++;
+		}
+		const textBefore = content.slice(index, url.index - Math.ceil(backslashesSequenceLength / 2));
+		if (textBefore) this.addTextToken(tokens, textBefore);
+
+		const urlEndIndex = url.index + url.length;
+		if (backslashesSequenceLength % 2 === 1) { // escaped URL: kept verbatim, but not linked
+			tokens.push({type: 'URL', text: url.text});
+			return urlEndIndex;
+		}
+		const match = content.slice(urlEndIndex).match(`^${attributesRegexString}`);
+		tokens.push({
+			type: 'URL',
+			text: url.text + (match?.[0] ?? ''),
+			defaultAttribute: url.text,
+			attributes: match?.[1],
+		});
+		return urlEndIndex + (match?.[0].length ?? 0);
+	};
+
 	getNodeTokens = (content: string, type: BlockNodeType) => {
 		const tokens: InlineToken[] = [];
 		let index = 0;
@@ -136,8 +165,14 @@ class InlineParser {
 			? commonTokens.slice(0, -1).concat(tableRowTokens)
 			: commonTokens;
 
+		let url = findUrl(content, 0, this.data);
 		while (index < content.length) {
+			if (url && url.index < index) url = findUrl(content, index, this.data);
 			const nextSpecialCharIndex = content.slice(index).search(specialChars);
+			if (url && (nextSpecialCharIndex < 0 || url.index <= index + nextSpecialCharIndex)) {
+				index = this.addUrlToken(tokens, content, index, url);
+				continue;
+			}
 			if (nextSpecialCharIndex < 0) {
 				this.addTextToken(tokens, content.slice(index));
 				index = content.length;
@@ -245,7 +280,7 @@ class InlineParser {
 							}
 						}
 						if (type === 'VARIABLE') {
-							match = contentRest.match(/^([A-Za-z][A-Za-z0-9_]+)}}/);
+							match = contentRest.match(`^(${variableNameRegexString})}}`);
 							newToken.type = 'TEXT';
 							if (match?.[1]) {
 								newToken.text = this.data[match[1]] ?? '';
@@ -290,6 +325,14 @@ class InlineParser {
 			let attributes: Record<string, string | string[] | number> | undefined;
 
 			if (token.type === 'MATH') {
+				index++;
+				continue;
+			}
+			if (token.type === 'URL') {
+				const href = this.autolinkSuppressionDepth === 0 ? token.defaultAttribute : undefined;
+				node.children.push(new InlineNode('URL', href
+					? {content: href, attributes: {href, ...parseAttributes(token.attributes)}}
+					: {content: token.text}));
 				index++;
 				continue;
 			}

@@ -115,7 +115,7 @@ class Typography {
 	openDoubleQuotes: Array<{node: Node, position: number}>;
 	openSingleQuotes: Array<{node: Node, position: number}>;
 
-	excludedTypes = ['BLOCK_CODE', 'CODE', 'KBD', 'SAMP', 'BLOCK_MATH', 'INLINE_MATH'];
+	excludedTypes = ['BLOCK_CODE', 'CODE', 'KBD', 'SAMP', 'BLOCK_MATH', 'INLINE_MATH', 'URL'];
 
 	constructor(ast: Node, options: Options) {
 		this.ast = ast;
